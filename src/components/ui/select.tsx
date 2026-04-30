@@ -151,7 +151,8 @@ function SelectGroup({ children }: { children?: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function SelectValue() {
+function SelectValue({ placeholder }: { placeholder?: string }) {
+  void placeholder;
   return null;
 }
 
