@@ -236,7 +236,7 @@ export default function AdminApplicationsPage() {
           }
         />
 
-        <div className="rounded-3xl border border-border/70 bg-card/70 p-4">
+        <div className="rounded-xl border border-border/60 bg-card p-4">
           <div className="grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_auto]">
             <Input
               value={keyword}
@@ -322,7 +322,7 @@ export default function AdminApplicationsPage() {
         </div>
 
         {loading ? (
-          <div className="rounded-2xl border border-dashed border-border/70 p-8 text-sm text-muted-foreground">
+          <div className="rounded-xl border border-dashed border-border/60 p-8 text-sm text-muted-foreground">
             加载报名数据中...
           </div>
         ) : (

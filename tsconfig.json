@@ -37,6 +37,19 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".claude",
+    "docs",
+    "dub-main",
+    "midday-main",
+    "plane-preview",
+    "shadcn-dashboard-landing-template-main",
+    "launch-ui-main",
+    "ui-main",
+    "lucide-main",
+    "sonner-main",
+    "recharts-main",
+    "fullcalendar-main",
+    "dnd-kit-main"
   ]
 }

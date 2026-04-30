@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -25,17 +28,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-const signupFormSchema = z.object({
-  name: z.string().min(2, "请输入姓名"),
-  studentId: z.string().min(6, "请输入有效学号"),
-  email: z.string().email("请输入有效的邮箱地址"),
-  password: z.string().min(6, "密码至少需要 6 位"),
-  confirmPassword: z.string().min(6, "请再次输入密码"),
-  terms: z.boolean().refine((value) => value === true, "请先勾选说明"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "两次输入的密码不一致",
-  path: ["confirmPassword"],
-});
+const signupFormSchema = z
+  .object({
+    name: z.string().min(2, "Please enter your name."),
+    studentId: z.string().min(6, "Please enter a valid student ID."),
+    email: z.string().email("Please enter a valid email address."),
+    password: z.string().min(6, "Password must be at least 6 characters."),
+    confirmPassword: z.string().min(6, "Please confirm your password."),
+    terms: z.boolean().refine((value) => value, "Please accept the terms."),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
 
 type SignupFormValues = z.infer<typeof signupFormSchema>;
 
@@ -43,6 +48,10 @@ export function SignupForm1({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [submitting, setSubmitting] = useState(false);
+
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
     defaultValues: {
@@ -55,18 +64,62 @@ export function SignupForm1({
     },
   });
 
-  function onSubmit(data: SignupFormValues) {
-    console.log("Signup attempt:", data);
-    toast.success("注册请求已提交，账号创建逻辑将在后续阶段接入。");
+  async function onSubmit(data: SignupFormValues) {
+    setSubmitting(true);
+    try {
+      const registerResponse = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: data.name,
+          studentId: data.studentId,
+          email: data.email,
+          password: data.password,
+        }),
+      });
+
+      const registerPayload = (await registerResponse.json()) as {
+        message?: string;
+      };
+
+      if (!registerResponse.ok) {
+        throw new Error(registerPayload.message ?? "Failed to register.");
+      }
+
+      const callbackUrl = searchParams.get("callbackUrl") ?? "/admin";
+      const signInResult = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+        callbackUrl,
+      });
+
+      if (!signInResult || signInResult.error) {
+        toast.success("Account created. Please sign in.");
+        router.push("/sign-in");
+        return;
+      }
+
+      toast.success("Account created and signed in.");
+      router.push(signInResult.url ?? callbackUrl);
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to register.";
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">创建学生账号</CardTitle>
+          <CardTitle className="text-xl">Create Account</CardTitle>
           <CardDescription>
-            注册后可提交报名、查看审核进度并沉淀常见问题
+            Register as a student to submit and track competition applications.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -80,9 +133,9 @@ export function SignupForm1({
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>姓名</FormLabel>
+                          <FormLabel>Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="张三" {...field} />
+                            <Input placeholder="Your name" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -93,7 +146,7 @@ export function SignupForm1({
                       name="studentId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>学号</FormLabel>
+                          <FormLabel>Student ID</FormLabel>
                           <FormControl>
                             <Input placeholder="2023123456" {...field} />
                           </FormControl>
@@ -102,16 +155,18 @@ export function SignupForm1({
                       )}
                     />
                   </div>
+
                   <FormField
                     control={form.control}
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>邮箱</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
                             placeholder="name@college.edu.cn"
+                            autoComplete="email"
                             {...field}
                           />
                         </FormControl>
@@ -119,32 +174,43 @@ export function SignupForm1({
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>密码</FormLabel>
+                        <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <Input
+                            type="password"
+                            autoComplete="new-password"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>确认密码</FormLabel>
+                        <FormLabel>Confirm Password</FormLabel>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <Input
+                            type="password"
+                            autoComplete="new-password"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="terms"
@@ -158,23 +224,26 @@ export function SignupForm1({
                           />
                         </FormControl>
                         <FormLabel className="text-sm">
-                          我确认提交的信息真实有效，并同意平台使用说明
+                          I confirm the submitted information is valid and I accept
+                          the platform terms.
                         </FormLabel>
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full cursor-pointer">
-                    创建账号
-                  </Button>
 
-                  <Button variant="outline" className="w-full" type="button" disabled>
-                    学校统一认证（预留）
+                  <Button
+                    type="submit"
+                    className="w-full cursor-pointer"
+                    disabled={submitting}
+                  >
+                    {submitting ? "Creating..." : "Create Account"}
                   </Button>
                 </div>
+
                 <div className="text-center text-sm">
-                  已有账号？{" "}
+                  Already have an account?{" "}
                   <a href="/sign-in" className="underline underline-offset-4">
-                    去登录
+                    Sign in
                   </a>
                 </div>
               </div>
@@ -182,9 +251,6 @@ export function SignupForm1({
           </Form>
         </CardContent>
       </Card>
-      <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        当前为纯前端 Mock 骨架，后续将接入 <a href="#">统一认证</a>、<a href="#">微信绑定</a> 与账号状态校验。
-      </div>
     </div>
   );
 }

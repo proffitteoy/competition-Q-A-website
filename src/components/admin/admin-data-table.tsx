@@ -62,7 +62,7 @@ export function AdminDataTable<TData>({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 rounded-3xl border border-border/70 bg-card/70 p-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 md:flex-row md:items-center md:justify-between">
         <Input
           value={globalFilter}
           onChange={(event) => setGlobalFilter(event.target.value)}
@@ -71,7 +71,7 @@ export function AdminDataTable<TData>({
         />
         <div className="text-sm text-muted-foreground">{totalLabel}</div>
       </div>
-      <div className="overflow-hidden rounded-3xl border border-border/70">
+      <div className="overflow-hidden rounded-xl border border-border/60">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

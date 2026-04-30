@@ -11,6 +11,7 @@ interface FileUploadProps {
   accept?: string;
   multiple?: boolean;
   className?: string;
+  onFilesChange?: (files: File[]) => void;
 }
 
 export function FileUpload({
@@ -19,6 +20,7 @@ export function FileUpload({
   accept,
   multiple = false,
   className,
+  onFilesChange,
 }: FileUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
 
@@ -52,6 +54,7 @@ export function FileUpload({
             onChange={(event) => {
               const nextFiles = Array.from(event.target.files ?? []);
               setFiles(nextFiles);
+              onFilesChange?.(nextFiles);
             }}
           />
           {names.length ? (

@@ -26,19 +26,20 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Competition } from "@/lib/mock-data";
+import type { UploadedFileMeta } from "@/lib/storage/types";
 
 import { FileUpload } from "../forms/file-upload";
 
 const applicationSchema = z.object({
-  applicantName: z.string().min(2, "请填写真实姓名"),
-  studentId: z.string().min(6, "请填写学号"),
-  college: z.string().min(2, "请填写学院"),
-  major: z.string().min(2, "请填写专业"),
-  grade: z.string().min(1, "请填写年级"),
-  phone: z.string().min(6, "请填写联系电话"),
-  email: z.string().email("请输入有效邮箱"),
+  applicantName: z.string().min(2, "Please enter your name."),
+  studentId: z.string().min(6, "Please enter a valid student ID."),
+  college: z.string().min(2, "Please enter your college."),
+  major: z.string().min(2, "Please enter your major."),
+  grade: z.string().min(1, "Please enter your grade."),
+  phone: z.string().min(6, "Please enter your phone number."),
+  email: z.string().email("Please enter a valid email address."),
   teamName: z.string().optional(),
-  statement: z.string().min(12, "参赛说明至少 12 个字"),
+  statement: z.string().min(12, "Please provide at least 12 characters."),
 });
 
 type ApplicationValues = z.infer<typeof applicationSchema>;
@@ -47,8 +48,42 @@ interface ApplicationFormProps {
   competition: Competition;
 }
 
+async function uploadAttachments(input: {
+  files: File[];
+  competitionId: string;
+}): Promise<UploadedFileMeta[]> {
+  if (input.files.length === 0) {
+    return [];
+  }
+
+  const formData = new FormData();
+  formData.set("scope", "registration");
+  formData.set("competitionId", input.competitionId);
+  for (const file of input.files) {
+    formData.append("files", file);
+  }
+
+  const response = await fetch("/api/uploads", {
+    method: "POST",
+    body: formData,
+  });
+  const payload = (await response.json()) as {
+    files?: UploadedFileMeta[];
+    message?: string;
+  };
+
+  if (!response.ok) {
+    throw new Error(payload.message ?? "Failed to upload attachments.");
+  }
+
+  return payload.files ?? [];
+}
+
 export function ApplicationForm({ competition }: ApplicationFormProps) {
   const [submitting, setSubmitting] = useState(false);
+  const [materialFiles, setMaterialFiles] = useState<File[]>([]);
+  const [extraFiles, setExtraFiles] = useState<File[]>([]);
+
   const form = useForm<ApplicationValues>({
     resolver: zodResolver(applicationSchema),
     defaultValues: {
@@ -65,8 +100,20 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
   });
 
   const onSubmit = async (values: ApplicationValues) => {
+    if (competition.registrationMode === "team" && !values.teamName?.trim()) {
+      form.setError("teamName", {
+        message: "Team mode requires a team name.",
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
+      const attachments = await uploadAttachments({
+        files: [...materialFiles, ...extraFiles],
+        competitionId: competition.id,
+      });
+
       const response = await fetch("/api/applications", {
         method: "POST",
         headers: {
@@ -76,9 +123,18 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
           competitionId: competition.id,
           competitionTitle: competition.title,
           applicantName: values.applicantName,
+          studentId: values.studentId,
           college: values.college,
           major: values.major,
           grade: values.grade,
+          phone: values.phone,
+          email: values.email,
+          statement: values.statement,
+          teamName:
+            competition.registrationMode === "team"
+              ? values.teamName?.trim() ?? ""
+              : undefined,
+          attachments,
           mode: competition.registrationMode,
         }),
       });
@@ -87,15 +143,18 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
         application?: { id: string };
       };
       if (!response.ok) {
-        throw new Error(payload.message ?? "报名提交失败");
+        throw new Error(payload.message ?? "Application submission failed.");
       }
 
-      toast.success("报名提交成功", {
-        description: `报名编号：${payload.application?.id ?? "已生成"}`,
+      toast.success("Application submitted.", {
+        description: `Application ID: ${payload.application?.id ?? "Created"}`,
       });
       form.reset();
+      setMaterialFiles([]);
+      setExtraFiles([]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "报名提交失败";
+      const message =
+        error instanceof Error ? error.message : "Application submission failed.";
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -106,7 +165,7 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       <Card className="border-border/70">
         <CardHeader>
-          <CardTitle>学生报名表</CardTitle>
+          <CardTitle>Application Form</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -117,9 +176,9 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
                   name="applicantName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>姓名</FormLabel>
+                      <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="例如：张三" {...field} />
+                        <Input placeholder="Student name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -130,7 +189,7 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
                   name="studentId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>学号</FormLabel>
+                      <FormLabel>Student ID</FormLabel>
                       <FormControl>
                         <Input placeholder="2023123456" {...field} />
                       </FormControl>
@@ -143,9 +202,9 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
                   name="college"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>学院</FormLabel>
+                      <FormLabel>College</FormLabel>
                       <FormControl>
-                        <Input placeholder="信息学院" {...field} />
+                        <Input placeholder="School / College" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -156,9 +215,9 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
                   name="major"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>专业</FormLabel>
+                      <FormLabel>Major</FormLabel>
                       <FormControl>
-                        <Input placeholder="软件工程" {...field} />
+                        <Input placeholder="Major" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -169,9 +228,9 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
                   name="grade"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>年级</FormLabel>
+                      <FormLabel>Grade</FormLabel>
                       <FormControl>
-                        <Input placeholder="2023 级" {...field} />
+                        <Input placeholder="2023" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -182,7 +241,7 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>手机号</FormLabel>
+                      <FormLabel>Phone</FormLabel>
                       <FormControl>
                         <Input placeholder="13800000000" {...field} />
                       </FormControl>
@@ -195,7 +254,7 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
                   name="email"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
-                      <FormLabel>邮箱</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input placeholder="name@stu.example.edu" {...field} />
                       </FormControl>
@@ -211,9 +270,9 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
                   name="teamName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>团队名称</FormLabel>
+                      <FormLabel>Team Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="例如：创新冲锋队" {...field} />
+                        <Input placeholder="Team name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -226,11 +285,11 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
                 name="statement"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>参赛说明</FormLabel>
+                    <FormLabel>Statement</FormLabel>
                     <FormControl>
                       <Textarea
                         rows={6}
-                        placeholder="填写参赛动机、项目方向与团队能力。"
+                        placeholder="Describe your motivation and project direction."
                         {...field}
                       />
                     </FormControl>
@@ -241,23 +300,25 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
 
               <div className="grid gap-4">
                 <FileUpload
-                  label="报名材料"
-                  hint="当前 MVP 使用基础上传入口，后续接对象存储。"
+                  label="Application Files"
+                  hint="Upload required registration files."
                   multiple
+                  onFilesChange={setMaterialFiles}
                 />
                 <FileUpload
-                  label="补充附件"
-                  hint="可选上传项目摘要、证明截图等。"
+                  label="Additional Files"
+                  hint="Optional uploads such as screenshots or supplementary PDFs."
                   accept="image/*,.pdf"
+                  onFilesChange={setExtraFiles}
                 />
               </div>
 
               <div className="flex flex-wrap gap-3">
                 <Button type="submit" disabled={submitting}>
-                  {submitting ? "提交中..." : "提交报名"}
+                  {submitting ? "Submitting..." : "Submit Application"}
                 </Button>
                 <Button type="button" variant="outline" disabled>
-                  暂存草稿（待实现）
+                  Save Draft (TODO)
                 </Button>
               </div>
             </form>
@@ -268,18 +329,21 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
       <div className="space-y-6">
         <Card className="border-border/70">
           <CardHeader>
-            <CardTitle>报名提醒</CardTitle>
+            <CardTitle>Notes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm leading-7 text-muted-foreground">
-            <p>同一学生同一比赛不允许重复提交有效报名记录。</p>
-            <p>团队报名默认以发起人作为记录主申请人，后续可补成员明细。</p>
-            <p>提交后可在“我的报名”查看审核状态与审核意见。</p>
+            <p>One student can only keep one active application per competition.</p>
+            <p>Team mode uses the submitter as the initial team leader record.</p>
+            <p>
+              After submission, you can track status and review comments in My
+              Applications.
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-border/70">
           <CardHeader>
-            <CardTitle>报名模式</CardTitle>
+            <CardTitle>Registration Mode</CardTitle>
           </CardHeader>
           <CardContent>
             <Select defaultValue={competition.registrationMode}>
@@ -287,8 +351,8 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="individual">个人报名</SelectItem>
-                <SelectItem value="team">团队报名</SelectItem>
+                <SelectItem value="individual">Individual</SelectItem>
+                <SelectItem value="team">Team</SelectItem>
               </SelectContent>
             </Select>
           </CardContent>
@@ -297,4 +361,3 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
     </div>
   );
 }
-

@@ -9,3 +9,7 @@ export function isAdminRole(role: UserRole) {
 export function isContentManagerRole(role: UserRole) {
   return role === "super_admin" || role === "competition_admin" || role === "content_editor";
 }
+
+export function isSuperAdminRole(role: UserRole) {
+  return role === "super_admin";
+}

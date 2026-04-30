@@ -20,7 +20,7 @@ export function PortalFaq() {
             平台骨架的当前边界
           </h2>
         </div>
-        <Accordion type="single" collapsible className="rounded-3xl border border-border/70 bg-card/70 px-6">
+        <Accordion type="single" collapsible className="rounded-xl border border-border/60 bg-card px-6">
           {homepageFaqs.map((item, index) => (
             <AccordionItem key={item.question} value={`item-${index + 1}`}>
               <AccordionTrigger className="text-left text-base font-medium">

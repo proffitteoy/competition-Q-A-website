@@ -17,6 +17,7 @@ import {
   applications as mockApplications,
   type ApplicationRecord,
 } from "@/lib/mock-data";
+import type { UploadedFileMeta } from "@/lib/storage/types";
 import {
   competitions,
   registrationAuditLogs,
@@ -41,8 +42,11 @@ const ACTIVE_REGISTRATION_STATUSES: RegistrationStatus[] = [
   "withdrawn",
 ];
 
+const MOCK_WRITE_DISABLED_MESSAGE =
+  "Database is not configured. Write operations are disabled.";
+
 function formatDateTime(value: Date | null | undefined) {
-  if (!value) return "未提交";
+  if (!value) return "Not submitted";
   const year = value.getFullYear();
   const month = String(value.getMonth() + 1).padStart(2, "0");
   const day = String(value.getDate()).padStart(2, "0");
@@ -52,12 +56,12 @@ function formatDateTime(value: Date | null | undefined) {
 }
 
 function defaultNoteByStatus(status: RegistrationStatus) {
-  if (status === "draft") return "报名草稿待提交。";
-  if (status === "submitted") return "已提交，等待管理员审核。";
-  if (status === "approved") return "审核通过。";
-  if (status === "rejected") return "审核驳回，请补充材料后重新提交。";
-  if (status === "withdrawn") return "报名已由学生撤回。";
-  return "该报名已取消。";
+  if (status === "draft") return "Draft is not submitted.";
+  if (status === "submitted") return "Submitted and waiting for review.";
+  if (status === "approved") return "Approved.";
+  if (status === "rejected") return "Rejected. Please update and resubmit.";
+  if (status === "withdrawn") return "Withdrawn by applicant.";
+  return "Cancelled.";
 }
 
 function buildApplicationId(sequence: number) {
@@ -75,36 +79,84 @@ async function nextRegistrationNo(tx: DbTx) {
   return buildApplicationId(count + 1);
 }
 
-async function ensureApplicantUser(
-  tx: DbTx,
-  input: SubmitApplicationInput,
-) {
-  const existing = await tx.query.users.findFirst({
-    where: eq(users.name, input.applicantName),
+export interface SubmitApplicationInput {
+  competitionId: string;
+  competitionTitle: string;
+  applicantName: string;
+  studentId: string;
+  college: string;
+  major: string;
+  grade: string;
+  phone: string;
+  email: string;
+  statement: string;
+  teamName?: string;
+  attachments?: UploadedFileMeta[];
+  mode: ApplicationRecord["mode"];
+}
+
+async function ensureApplicantUser(tx: DbTx, input: SubmitApplicationInput) {
+  const existingByEmail = await tx.query.users.findFirst({
+    where: eq(users.email, input.email),
   });
-  if (existing) {
-    return existing;
+
+  if (existingByEmail) {
+    const updated = await tx
+      .update(users)
+      .set({
+        name: input.applicantName,
+        studentNo: input.studentId,
+        college: input.college,
+        major: input.major,
+        grade: input.grade,
+        phone: input.phone,
+        status: "active",
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, existingByEmail.id))
+      .returning();
+    return updated[0] ?? existingByEmail;
   }
 
-  const emailSafeName = input.applicantName
-    .replace(/\s+/g, "")
-    .replace(/[^a-zA-Z0-9\u4e00-\u9fa5_-]/g, "");
+  const existingByStudentNo = await tx.query.users.findFirst({
+    where: eq(users.studentNo, input.studentId),
+  });
+
+  if (existingByStudentNo) {
+    const updated = await tx
+      .update(users)
+      .set({
+        name: input.applicantName,
+        email: input.email,
+        college: input.college,
+        major: input.major,
+        grade: input.grade,
+        phone: input.phone,
+        status: "active",
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, existingByStudentNo.id))
+      .returning();
+    return updated[0] ?? existingByStudentNo;
+  }
 
   const created = await tx
     .insert(users)
     .values({
       name: input.applicantName,
-      email: `${emailSafeName || "student"}-${Date.now()}@mvp.local`,
+      email: input.email,
+      studentNo: input.studentId,
       college: input.college,
       major: input.major,
       grade: input.grade,
+      phone: input.phone,
       status: "active",
     })
     .returning();
 
   const applicant = created[0];
   if (!applicant) {
-    throw new Error("创建报名用户失败");
+    throw new Error("Failed to create applicant user.");
   }
 
   await tx
@@ -144,7 +196,7 @@ async function ensureCompetitionFormVersion(
   }
 
   if (!form) {
-    throw new Error("初始化报名表失败");
+    throw new Error("Failed to initialize registration form.");
   }
 
   if (form.currentVersionId) {
@@ -160,6 +212,7 @@ async function ensureCompetitionFormVersion(
     where: eq(registrationFormVersions.formId, form.id),
     orderBy: desc(registrationFormVersions.versionNo),
   });
+
   if (latestVersion) {
     await tx
       .update(registrationForms)
@@ -178,7 +231,7 @@ async function ensureCompetitionFormVersion(
       formId: form.id,
       versionNo: 1,
       status: "active",
-      changeNote: "MVP 默认报名表版本",
+      changeNote: "MVP default version",
       publishedAt: new Date(),
       createdBy,
     })
@@ -186,7 +239,7 @@ async function ensureCompetitionFormVersion(
 
   const version = createdVersion[0];
   if (!version) {
-    throw new Error("初始化报名表版本失败");
+    throw new Error("Failed to initialize registration form version.");
   }
 
   await tx
@@ -195,46 +248,46 @@ async function ensureCompetitionFormVersion(
       {
         formVersionId: version.id,
         fieldKey: "applicant_name",
-        label: "申请人姓名",
+        label: "Applicant Name",
         fieldType: "text",
         scope: "registration",
         isRequired: true,
         displayOrder: 1,
         exportOrder: 1,
-        exportLabel: "申请人姓名",
+        exportLabel: "Applicant Name",
       },
       {
         formVersionId: version.id,
         fieldKey: "college",
-        label: "学院",
+        label: "College",
         fieldType: "text",
         scope: "registration",
         isRequired: true,
         displayOrder: 2,
         exportOrder: 2,
-        exportLabel: "学院",
+        exportLabel: "College",
       },
       {
         formVersionId: version.id,
         fieldKey: "major",
-        label: "专业",
+        label: "Major",
         fieldType: "text",
         scope: "registration",
         isRequired: true,
         displayOrder: 3,
         exportOrder: 3,
-        exportLabel: "专业",
+        exportLabel: "Major",
       },
       {
         formVersionId: version.id,
         fieldKey: "grade",
-        label: "年级",
+        label: "Grade",
         fieldType: "text",
         scope: "registration",
         isRequired: true,
         displayOrder: 4,
         exportOrder: 4,
-        exportLabel: "年级",
+        exportLabel: "Grade",
       },
     ])
     .onConflictDoNothing();
@@ -261,8 +314,6 @@ function mapReviewAction(toStatus: RegistrationStatus) {
 
 const applicantUser = alias(users, "applicant_user");
 const reviewerUser = alias(users, "reviewer_user");
-const MOCK_WRITE_DISABLED_MESSAGE =
-  "当前未配置数据库，写操作已禁用。请先配置 DATABASE_URL 并完成迁移。";
 
 type QueryFilters = {
   applicationId?: string;
@@ -282,9 +333,7 @@ function queryMockApplications(filters: QueryFilters = {}) {
       if (filters.competitionId && item.competitionId !== filters.competitionId) return false;
       if (filters.applicantName && item.applicantName !== filters.applicantName) return false;
 
-      if (!keyword) {
-        return true;
-      }
+      if (!keyword) return true;
 
       return [item.competitionTitle, item.applicantName, item.college].some((value) =>
         value.toLowerCase().includes(keyword),
@@ -362,7 +411,7 @@ async function queryApplications(filters: QueryFilters = {}) {
     submittedAt: formatDateTime(row.submittedAt),
     mode: row.applyMode,
     status: row.status,
-    reviewer: row.reviewerName ?? "待分配",
+    reviewer: row.reviewerName ?? "Pending",
     note: row.latestReviewComment ?? defaultNoteByStatus(row.status),
   }));
 }
@@ -384,16 +433,6 @@ export async function getApplicationById(id: string) {
   return rows[0];
 }
 
-export interface SubmitApplicationInput {
-  competitionId: string;
-  competitionTitle: string;
-  applicantName: string;
-  college: string;
-  major: string;
-  grade: string;
-  mode: ApplicationRecord["mode"];
-}
-
 export async function submitApplication(input: SubmitApplicationInput) {
   if (!isDatabaseConfigured()) {
     throw new Error(MOCK_WRITE_DISABLED_MESSAGE);
@@ -405,7 +444,7 @@ export async function submitApplication(input: SubmitApplicationInput) {
       where: eq(competitions.id, input.competitionId),
     });
     if (!competition) {
-      throw new Error("比赛不存在");
+      throw new Error("Competition does not exist.");
     }
 
     const applicant = await ensureApplicantUser(tx, input);
@@ -418,7 +457,7 @@ export async function submitApplication(input: SubmitApplicationInput) {
       ),
     });
     if (duplicated && isActiveRegistration(duplicated.status)) {
-      throw new Error("同一学生在该比赛已有有效报名记录，请勿重复提交");
+      throw new Error("An active application already exists for this competition.");
     }
 
     const formVersionId = await ensureCompetitionFormVersion(
@@ -432,19 +471,39 @@ export async function submitApplication(input: SubmitApplicationInput) {
 
     const payload = {
       applicantName: input.applicantName,
+      studentId: input.studentId,
       college: input.college,
       major: input.major,
       grade: input.grade,
+      phone: input.phone,
+      email: input.email,
+      statement: input.statement,
+      teamName: input.teamName ?? null,
+      attachments: input.attachments ?? [],
     } as Record<string, unknown>;
 
     const applicantSnapshot = {
       userId: applicant.id,
       name: input.applicantName,
+      studentId: input.studentId,
       college: input.college,
       major: input.major,
       grade: input.grade,
+      phone: input.phone,
+      email: input.email,
       capturedAt: now.toISOString(),
     };
+
+    const teamSnapshot =
+      input.mode === "team" && input.teamName
+        ? [
+            {
+              teamName: input.teamName,
+              leaderName: input.applicantName,
+              leaderStudentId: input.studentId,
+            },
+          ]
+        : [];
 
     const created = await tx
       .insert(registrations)
@@ -459,13 +518,13 @@ export async function submitApplication(input: SubmitApplicationInput) {
         payloadJson: payload,
         applicantSnapshotJson: applicantSnapshot,
         submittedAt: now,
-        latestReviewComment: "已提交，等待管理员审核。",
+        latestReviewComment: "Submitted and waiting for review.",
       })
       .returning();
 
     const registration = created[0];
     if (!registration) {
-      throw new Error("创建报名记录失败");
+      throw new Error("Failed to create registration.");
     }
 
     await tx.insert(registrationRevisions).values({
@@ -473,7 +532,7 @@ export async function submitApplication(input: SubmitApplicationInput) {
       revisionNo: 1,
       actionType: "submit",
       payloadSnapshotJson: payload,
-      teamSnapshotJson: [],
+      teamSnapshotJson: teamSnapshot,
       applicantSnapshotJson: applicantSnapshot,
       formVersionId,
       createdBy: applicant.id,
@@ -486,7 +545,7 @@ export async function submitApplication(input: SubmitApplicationInput) {
       action: "submit",
       operatorUserId: applicant.id,
       operatorRole: "student_user",
-      comment: "学生提交报名",
+      comment: "Application submitted by student.",
     });
 
     return registrationNo;
@@ -494,7 +553,7 @@ export async function submitApplication(input: SubmitApplicationInput) {
 
   const latest = await getApplicationById(insertedNo);
   if (!latest) {
-    throw new Error("报名提交成功，但读取结果失败");
+    throw new Error("Application submitted, but failed to fetch latest record.");
   }
   return latest;
 }
@@ -510,12 +569,12 @@ export async function reviewApplication(
   }
 
   const db = getDb();
-  const updatedRegistrationId = await db.transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     const current = await tx.query.registrations.findFirst({
       where: eq(registrations.registrationNo, id),
     });
     if (!current) {
-      throw new Error("报名记录不存在");
+      throw new Error("Application does not exist.");
     }
 
     const now = new Date();
@@ -540,13 +599,11 @@ export async function reviewApplication(
       operatorRole: operator.role,
       comment,
     });
-
-    return current.id;
   });
 
   const refreshed = await getApplicationById(id);
   if (!refreshed) {
-    throw new Error(`审核完成，但读取记录失败（${updatedRegistrationId}）`);
+    throw new Error("Review completed, but failed to fetch updated record.");
   }
   return refreshed;
 }
@@ -571,14 +628,16 @@ export async function bulkReviewApplications(input: {
       await reviewApplication(id, input.toStatus, input.operator, input.comment);
       updatedCount += 1;
     } catch {
-      // 批量操作中单条失败时不中断其他记录处理。
+      // Continue for other records in batch mode.
     }
   }
 
   return { updated: updatedCount };
 }
 
-export async function listRegistrationAuditLogsByApplicationIds(applicationIds: string[]) {
+export async function listRegistrationAuditLogsByApplicationIds(
+  applicationIds: string[],
+) {
   if (!isDatabaseConfigured()) {
     return [];
   }
@@ -630,6 +689,6 @@ export async function listRegistrationAuditLogsByApplicationIds(applicationIds: 
     action: item.action,
     comment: item.comment,
     createdAt: formatDateTime(item.createdAt),
-    operatorName: item.operatorName ?? "系统",
+    operatorName: item.operatorName ?? "System",
   }));
 }

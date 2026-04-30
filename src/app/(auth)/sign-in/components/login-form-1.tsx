@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -21,14 +24,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import {
-  Input,
-} from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 const loginFormSchema = z.object({
-  email: z.string().email("请输入有效的邮箱地址"),
-  password: z.string().min(6, "密码至少需要 6 位"),
+  email: z.string().email("Please enter a valid email address."),
+  password: z.string().min(6, "Password must be at least 6 characters."),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -37,6 +38,10 @@ export function LoginForm1({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [submitting, setSubmitting] = useState(false);
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
@@ -45,18 +50,39 @@ export function LoginForm1({
     },
   });
 
-  function onSubmit(data: LoginFormValues) {
-    console.log("Login attempt:", data);
-    toast.success("登录请求已提交，认证逻辑将在后续阶段接入。");
+  async function onSubmit(data: LoginFormValues) {
+    setSubmitting(true);
+    try {
+      const callbackUrl = searchParams.get("callbackUrl") ?? "/admin";
+      const result = await signIn("credentials", {
+        ...data,
+        redirect: false,
+        callbackUrl,
+      });
+
+      if (!result || result.error) {
+        toast.error("Invalid email or password.");
+        return;
+      }
+
+      toast.success("Signed in successfully.");
+      router.push(result.url ?? callbackUrl);
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to sign in.";
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">欢迎登录</CardTitle>
+          <CardTitle className="text-xl">Sign In</CardTitle>
           <CardDescription>
-            使用校园邮箱登录，查看比赛、报名记录与审核进度
+            Use your account to access applications and the admin workspace.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -69,11 +95,12 @@ export function LoginForm1({
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>邮箱</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
                             placeholder="name@college.edu.cn"
+                            autoComplete="email"
                             {...field}
                           />
                         </FormControl>
@@ -87,33 +114,39 @@ export function LoginForm1({
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center">
-                          <FormLabel>密码</FormLabel>
+                          <FormLabel>Password</FormLabel>
                           <a
                             href="/forgot-password"
                             className="ml-auto text-sm underline-offset-4 hover:underline"
                           >
-                            忘记密码？
+                            Forgot password?
                           </a>
                         </div>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <Input
+                            type="password"
+                            autoComplete="current-password"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full cursor-pointer">
-                    登录
-                  </Button>
 
-                  <Button variant="outline" className="w-full" type="button" disabled>
-                    学校统一认证（预留）
+                  <Button
+                    type="submit"
+                    className="w-full cursor-pointer"
+                    disabled={submitting}
+                  >
+                    {submitting ? "Signing in..." : "Sign In"}
                   </Button>
                 </div>
+
                 <div className="text-center text-sm">
-                  还没有账号？{" "}
+                  No account yet?{" "}
                   <a href="/sign-up" className="underline underline-offset-4">
-                    创建学生账号
+                    Create one
                   </a>
                 </div>
               </div>
@@ -121,9 +154,6 @@ export function LoginForm1({
           </Form>
         </CardContent>
       </Card>
-      <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        当前为纯前端 Mock 骨架，后续将接入 <a href="#">统一认证</a>、<a href="#">微信绑定</a> 与账号状态校验。
-      </div>
     </div>
   );
 }

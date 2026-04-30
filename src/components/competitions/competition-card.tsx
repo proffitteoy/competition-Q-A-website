@@ -17,7 +17,7 @@ export function CompetitionCard({
   compact = false,
 }: CompetitionCardProps) {
   return (
-    <Card className="group overflow-hidden border-border/70 bg-background/85 transition-transform duration-200 hover:-translate-y-0.5">
+    <Card className="group overflow-hidden border-border/60 bg-card transition-colors duration-150 hover:border-border">
       <CardHeader className="space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-3">
@@ -52,7 +52,7 @@ export function CompetitionCard({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-wrap items-center justify-between gap-3 border-t border-dashed border-border/80">
+      <CardFooter className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60">
         <div className="text-sm text-muted-foreground">
           {competition.department} · {competition.location}
         </div>

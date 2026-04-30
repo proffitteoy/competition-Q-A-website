@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function PortalFooter() {
   return (
-    <footer className="border-t border-border/60 bg-card/60">
+    <footer className="border-t border-border/60 bg-card">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-[1.5fr_1fr_1fr] md:px-6">
         <div className="space-y-3">
           <p className="text-xs font-semibold tracking-[0.24em] text-muted-foreground uppercase">

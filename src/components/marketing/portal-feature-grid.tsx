@@ -44,9 +44,9 @@ export function PortalFeatureGrid() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {features.map((feature) => (
-            <Card key={feature.title} className="border-border/70 bg-background/80">
+            <Card key={feature.title} className="border-border/60 transition-colors hover:border-border">
               <CardHeader className="space-y-4">
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <feature.icon className="size-6" />
                 </div>
                 <CardTitle className="text-xl">{feature.title}</CardTitle>

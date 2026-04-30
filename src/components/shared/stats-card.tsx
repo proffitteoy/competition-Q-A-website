@@ -11,7 +11,7 @@ interface StatsCardProps {
 
 export function StatsCard({ label, value, description, icon }: StatsCardProps) {
   return (
-    <Card className="border-border/70 bg-card/80 shadow-sm">
+    <Card className="border-border/60">
       <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {label}
@@ -19,7 +19,7 @@ export function StatsCard({ label, value, description, icon }: StatsCardProps) {
         {icon}
       </CardHeader>
       <CardContent className="space-y-2">
-        <div className="text-3xl font-semibold tracking-tight">{value}</div>
+        <div className="text-3xl font-semibold tracking-tight font-tabular">{value}</div>
         <p className="text-sm leading-6 text-muted-foreground">{description}</p>
       </CardContent>
     </Card>

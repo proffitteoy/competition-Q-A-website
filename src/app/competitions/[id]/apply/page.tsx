@@ -26,8 +26,8 @@ export default async function CompetitionApplyPage({
         <div className="mx-auto max-w-7xl space-y-8">
           <PageHeader
             eyebrow="Apply"
-            title={`报名：${competition.title}`}
-            description="该页面已接入 MVP 报名提交流程，提交后会写入 PostgreSQL 并记录状态日志。"
+            title={`Apply: ${competition.title}`}
+            description="This page is connected to the MVP application submission flow."
           />
           <ApplicationForm competition={competition} />
         </div>

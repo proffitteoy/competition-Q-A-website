@@ -20,9 +20,9 @@ const navLinks = [
 export function PortalNavbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
+      <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+          <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Trophy className="size-5" />
           </div>
           <div className="leading-tight">

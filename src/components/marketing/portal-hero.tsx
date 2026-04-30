@@ -18,7 +18,7 @@ export function PortalHero({ featuredCompetitions }: PortalHeroProps) {
       <div className="absolute inset-x-0 top-0 -z-10 h-[28rem] bg-[radial-gradient(circle_at_top_left,_rgba(209,175,109,0.28),_transparent_38%),radial-gradient(circle_at_top_right,_rgba(35,74,129,0.16),_transparent_32%)]" />
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-4 py-2 text-sm text-muted-foreground shadow-sm">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-3 py-1.5 text-sm text-muted-foreground">
             <span className="inline-flex size-2 rounded-full bg-emerald-500" />
             当前优先落地：竞赛门户、报名链路、审核工作台
           </div>
@@ -60,9 +60,9 @@ export function PortalHero({ featuredCompetitions }: PortalHeroProps) {
                 label: "沉淀 FAQ 与资料下载",
               },
             ].map((item) => (
-              <Card key={item.label} className="border-border/70 bg-background/80">
+              <Card key={item.label} className="border-border/60 bg-card/90">
                 <CardContent className="flex items-center gap-3 p-4">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <item.icon className="size-5" />
                   </div>
                   <p className="text-sm font-medium leading-6">{item.label}</p>
@@ -91,12 +91,12 @@ export function PortalHero({ featuredCompetitions }: PortalHeroProps) {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {platformStats.slice(0, 2).map((stat) => (
-              <Card key={stat.label} className="border-border/70 bg-card/80">
+              <Card key={stat.label} className="border-border/60">
                 <CardContent className="space-y-2 p-5">
                   <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
                     {stat.label}
                   </p>
-                  <p className="text-3xl font-semibold tracking-tight">{stat.value}</p>
+                  <p className="text-3xl font-semibold tracking-tight font-tabular">{stat.value}</p>
                   <p className="text-sm leading-6 text-muted-foreground">{stat.description}</p>
                 </CardContent>
               </Card>
