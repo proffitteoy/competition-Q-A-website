@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Search, Trophy } from "lucide-react";
+import { Menu, LogOut, ScrollText, Trophy } from "lucide-react";
+import { signOut } from "next-auth/react";
 
+import type { UserRole } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -13,23 +15,42 @@ import {
 
 const navLinks = [
   { href: "/competitions", label: "比赛列表" },
-  { href: "/me/applications", label: "我的报名" },
-  { href: "/admin", label: "管理台" },
+  { href: "/#latest-notices", label: "通知公告" },
+  { href: "/#resource-library", label: "报名资料" },
 ];
 
-export function PortalNavbar() {
+interface PortalNavbarProps {
+  currentUser?:
+    | {
+        name: string;
+        role: UserRole;
+      }
+    | null;
+}
+
+function canAccessAdmin(role: UserRole) {
+  return role === "super_admin" || role === "competition_admin" || role === "content_editor";
+}
+
+export function PortalNavbar({ currentUser = null }: PortalNavbarProps) {
+  const showAdminEntry = currentUser ? canAccessAdmin(currentUser.role) : false;
+
+  async function handleSignOut() {
+    await signOut({ callbackUrl: "/" });
+  }
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
+    <header className="sticky top-0 z-50 border-b border-white/70 bg-[rgba(250,248,243,0.88)] backdrop-blur-xl">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="flex size-10 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_14px_35px_-18px_rgba(15,23,42,0.7)]">
             <Trophy className="size-5" />
           </div>
           <div className="leading-tight">
-            <div className="text-sm font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-              Competition Hub
+            <div className="text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase">
+              学院竞赛官方入口
             </div>
-            <div className="text-base font-semibold">学院竞赛中心</div>
+            <div className="text-base font-semibold text-slate-950">学院竞赛中心</div>
           </div>
         </Link>
 
@@ -38,23 +59,67 @@ export function PortalNavbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-950"
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
-          <Button variant="ghost" size="icon" aria-label="搜索比赛">
-            <Search className="size-4" />
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/sign-in">登录</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/competitions">立即查看比赛</Link>
-          </Button>
+        <div className="hidden items-center gap-3 md:flex">
+          {currentUser ? (
+            <>
+              <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-white/90 px-4 py-2 shadow-sm">
+                <div className="flex size-8 items-center justify-center rounded-full bg-amber-100 text-amber-900">
+                  <ScrollText className="size-4" />
+                </div>
+                <div className="leading-tight">
+                  <p className="text-sm font-semibold text-slate-950">{currentUser.name}</p>
+                  <p className="text-xs text-slate-500">
+                    {showAdminEntry ? "已登录，可进入管理台" : "已登录，可查看报名进度"}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                asChild
+                className="border-slate-300 bg-white/85 text-slate-900 hover:bg-slate-50"
+              >
+                <Link href="/me/applications">我的报名</Link>
+              </Button>
+              {showAdminEntry ? (
+                <Button
+                  variant="outline"
+                  asChild
+                  className="border-slate-300 bg-white/85 text-slate-900 hover:bg-slate-50"
+                >
+                  <Link href="/admin">管理台</Link>
+                </Button>
+              ) : null}
+              <Button
+                variant="ghost"
+                type="button"
+                className="text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                onClick={() => void handleSignOut()}
+              >
+                <LogOut className="size-4" />
+                退出登录
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                asChild
+                className="border-slate-300 bg-white/85 text-slate-900 hover:bg-slate-50"
+              >
+                <Link href="/sign-in">登录</Link>
+              </Button>
+              <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+                <Link href="/competitions">查看全部比赛</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <Sheet>
@@ -70,18 +135,46 @@ export function PortalNavbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-base font-medium text-foreground"
+                  className="text-base font-medium text-slate-950"
                 >
                   {link.label}
                 </Link>
               ))}
+              <Link
+                href={currentUser ? "/me/applications" : "/sign-in"}
+                className="text-base font-medium text-slate-950"
+              >
+                {currentUser ? "我的报名" : "登录"}
+              </Link>
+              {showAdminEntry ? (
+                <Link href="/admin" className="text-base font-medium text-slate-950">
+                  管理台
+                </Link>
+              ) : null}
               <div className="mt-4 flex flex-col gap-3">
-                <Button variant="outline" asChild>
-                  <Link href="/sign-in">登录</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/competitions">立即查看比赛</Link>
-                </Button>
+                {currentUser ? (
+                  <Button
+                    variant="outline"
+                    type="button"
+                    className="w-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50"
+                    onClick={() => void handleSignOut()}
+                  >
+                    退出登录
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      asChild
+                      className="border-slate-300 bg-white text-slate-900 hover:bg-slate-50"
+                    >
+                      <Link href="/sign-in">登录</Link>
+                    </Button>
+                    <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+                      <Link href="/competitions">查看全部比赛</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </SheetContent>

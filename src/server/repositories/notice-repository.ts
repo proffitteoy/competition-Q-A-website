@@ -17,6 +17,16 @@ export interface AdminNoticeRecord extends NoticeRecord {
   content?: string;
 }
 
+export interface PublishedNoticeRecord {
+  id: string;
+  competitionId: string;
+  competitionTitle: string;
+  title: string;
+  content: string;
+  updatedAt: string;
+  href: string;
+}
+
 function formatDateTime(value: Date | null | undefined) {
   if (!value) return "-";
   const year = value.getFullYear();
@@ -68,6 +78,25 @@ export async function listNotices() {
     updatedAt: formatDateTime(row.updatedAt),
     content: row.content,
   }));
+}
+
+export async function listPublishedNotices(limit = 4) {
+  const notices = await listNotices();
+
+  return notices
+    .filter((item) => item.status === "published")
+    .slice(0, limit)
+    .map<PublishedNoticeRecord>((item) => ({
+      id: item.id,
+      competitionId: item.competitionId,
+      competitionTitle: item.competition,
+      title: item.title,
+      content: item.content ?? "",
+      updatedAt: item.updatedAt,
+      href: item.competitionId
+        ? `/competitions/${item.competitionId}`
+        : "/competitions",
+    }));
 }
 
 export async function getNoticeById(id: string) {
