@@ -1,0 +1,334 @@
+{
+  "nodes": [
+    {
+      "id": "n0",
+      "type": "text",
+      "text": "# Phase 2 Entity Map\\nCompetition QA Platform\\n\\nFocus: identity, competition content, form definition, registration and review",
+      "x": 40,
+      "y": 20,
+      "width": 420,
+      "height": 160,
+      "color": "6"
+    },
+    {
+      "id": "n1",
+      "type": "text",
+      "text": "## Identity and Access",
+      "x": 40,
+      "y": 220,
+      "width": 220,
+      "height": 80,
+      "color": "2"
+    },
+    {
+      "id": "n2",
+      "type": "text",
+      "text": "**user**\\naccount profile\\n\\n- student and admin account\\n- source of profile data",
+      "x": 40,
+      "y": 320,
+      "width": 260,
+      "height": 140,
+      "color": "2"
+    },
+    {
+      "id": "n3",
+      "type": "text",
+      "text": "**role_assignment**\\nscope grant\\n\\n- role\\n- scope_type\\n- competition_id?",
+      "x": 340,
+      "y": 320,
+      "width": 260,
+      "height": 140,
+      "color": "2"
+    },
+    {
+      "id": "n4",
+      "type": "text",
+      "text": "## Competition and Content",
+      "x": 700,
+      "y": 220,
+      "width": 240,
+      "height": 80,
+      "color": "4"
+    },
+    {
+      "id": "n5",
+      "type": "text",
+      "text": "**competition**\\naggregate root\\n\\n- time window\\n- status\\n- owner",
+      "x": 700,
+      "y": 320,
+      "width": 280,
+      "height": 140,
+      "color": "4"
+    },
+    {
+      "id": "n6",
+      "type": "text",
+      "text": "**competition_notice**\\npublic notice",
+      "x": 1020,
+      "y": 280,
+      "width": 220,
+      "height": 90,
+      "color": "4"
+    },
+    {
+      "id": "n7",
+      "type": "text",
+      "text": "**competition_attachment**\\npublic attachment",
+      "x": 1020,
+      "y": 390,
+      "width": 220,
+      "height": 90,
+      "color": "4"
+    },
+    {
+      "id": "n8",
+      "type": "text",
+      "text": "**competition_faq**\\nfaq item",
+      "x": 1020,
+      "y": 500,
+      "width": 220,
+      "height": 90,
+      "color": "4"
+    },
+    {
+      "id": "n9",
+      "type": "text",
+      "text": "**competition_status_log**\\nstatus trail\\n\\n- from -> to\\n- reason",
+      "x": 700,
+      "y": 500,
+      "width": 280,
+      "height": 120,
+      "color": "4"
+    },
+    {
+      "id": "n10",
+      "type": "text",
+      "text": "## Form Definition",
+      "x": 40,
+      "y": 560,
+      "width": 220,
+      "height": 80,
+      "color": "5"
+    },
+    {
+      "id": "n11",
+      "type": "text",
+      "text": "**registration_form**\\nlogical form\\n\\n- one per competition in phase 2\\n- points to active version",
+      "x": 40,
+      "y": 660,
+      "width": 280,
+      "height": 130,
+      "color": "5"
+    },
+    {
+      "id": "n12",
+      "type": "text",
+      "text": "**registration_form_version**\\nversion head\\n\\n- version_no\\n- draft / active / retired",
+      "x": 360,
+      "y": 660,
+      "width": 280,
+      "height": 130,
+      "color": "5"
+    },
+    {
+      "id": "n13",
+      "type": "text",
+      "text": "**registration_form_field**\\nfield definition\\n\\n- field_key\\n- scope\\n- validation_json",
+      "x": 680,
+      "y": 660,
+      "width": 280,
+      "height": 130,
+      "color": "5"
+    },
+    {
+      "id": "n14",
+      "type": "text",
+      "text": "## Registration and Review",
+      "x": 40,
+      "y": 860,
+      "width": 260,
+      "height": 80,
+      "color": "3"
+    },
+    {
+      "id": "n15",
+      "type": "text",
+      "text": "**registration**\\ncurrent effective record\\n\\n- applicant_user_id\\n- status\\n- payload_json\\n- applicant_snapshot_json\\n- revision_no",
+      "x": 40,
+      "y": 960,
+      "width": 320,
+      "height": 180,
+      "color": "3"
+    },
+    {
+      "id": "n16",
+      "type": "text",
+      "text": "**registration_team_member**\\nteam member current value\\n\\n- leader flag\\n- member_payload_json",
+      "x": 400,
+      "y": 960,
+      "width": 280,
+      "height": 140,
+      "color": "3"
+    },
+    {
+      "id": "n17",
+      "type": "text",
+      "text": "**registration_revision**\\nrevision snapshot\\n\\n- payload snapshot\\n- applicant snapshot\\n- team snapshot",
+      "x": 720,
+      "y": 960,
+      "width": 300,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "n18",
+      "type": "text",
+      "text": "**registration_audit_log**\\nreview trail\\n\\n- action\\n- from -> to\\n- operator",
+      "x": 1060,
+      "y": 960,
+      "width": 280,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "n19",
+      "type": "text",
+      "text": "Insights\\n\\n- competition is the public and workflow aggregate root\\n- form_version separates current config from historical submissions\\n- registration serves query, revision and audit serve traceability",
+      "x": 1080,
+      "y": 20,
+      "width": 360,
+      "height": 180,
+      "color": "1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "fromNode": "n2",
+      "fromSide": "right",
+      "toNode": "n3",
+      "toSide": "left",
+      "label": "1:N"
+    },
+    {
+      "id": "e2",
+      "fromNode": "n5",
+      "fromSide": "left",
+      "toNode": "n3",
+      "toSide": "right",
+      "label": "scope"
+    },
+    {
+      "id": "e3",
+      "fromNode": "n5",
+      "fromSide": "right",
+      "toNode": "n6",
+      "toSide": "left",
+      "label": "1:N"
+    },
+    {
+      "id": "e4",
+      "fromNode": "n5",
+      "fromSide": "right",
+      "toNode": "n7",
+      "toSide": "left",
+      "label": "1:N"
+    },
+    {
+      "id": "e5",
+      "fromNode": "n5",
+      "fromSide": "right",
+      "toNode": "n8",
+      "toSide": "left",
+      "label": "1:N"
+    },
+    {
+      "id": "e6",
+      "fromNode": "n5",
+      "fromSide": "bottom",
+      "toNode": "n9",
+      "toSide": "top",
+      "label": "1:N"
+    },
+    {
+      "id": "e7",
+      "fromNode": "n5",
+      "fromSide": "left",
+      "toNode": "n11",
+      "toSide": "right",
+      "label": "1:1"
+    },
+    {
+      "id": "e8",
+      "fromNode": "n11",
+      "fromSide": "right",
+      "toNode": "n12",
+      "toSide": "left",
+      "label": "1:N"
+    },
+    {
+      "id": "e9",
+      "fromNode": "n12",
+      "fromSide": "right",
+      "toNode": "n13",
+      "toSide": "left",
+      "label": "1:N"
+    },
+    {
+      "id": "e10",
+      "fromNode": "n5",
+      "fromSide": "bottom",
+      "toNode": "n15",
+      "toSide": "top",
+      "label": "1:N"
+    },
+    {
+      "id": "e11",
+      "fromNode": "n2",
+      "fromSide": "bottom",
+      "toNode": "n15",
+      "toSide": "top",
+      "label": "applicant"
+    },
+    {
+      "id": "e12",
+      "fromNode": "n12",
+      "fromSide": "bottom",
+      "toNode": "n15",
+      "toSide": "top",
+      "label": "bound version"
+    },
+    {
+      "id": "e13",
+      "fromNode": "n15",
+      "fromSide": "right",
+      "toNode": "n16",
+      "toSide": "left",
+      "label": "1:N"
+    },
+    {
+      "id": "e14",
+      "fromNode": "n15",
+      "fromSide": "right",
+      "toNode": "n17",
+      "toSide": "left",
+      "label": "1:N"
+    },
+    {
+      "id": "e15",
+      "fromNode": "n15",
+      "fromSide": "right",
+      "toNode": "n18",
+      "toSide": "left",
+      "label": "1:N"
+    },
+    {
+      "id": "e16",
+      "fromNode": "n2",
+      "fromSide": "right",
+      "toNode": "n18",
+      "toSide": "top",
+      "label": "operator"
+    }
+  ]
+}
