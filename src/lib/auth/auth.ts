@@ -1,4 +1,3 @@
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { and, eq, isNull } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -7,7 +6,7 @@ import { compare } from "bcryptjs";
 
 import { getDb } from "@/lib/db/client";
 import { isDatabaseConfigured } from "@/lib/db/config";
-import { authSchema, roleAssignments, users } from "@/lib/db/schema";
+import { roleAssignments, users } from "@/lib/db/schema";
 import type { UserRole } from "@/lib/mock-data";
 
 const loginSchema = z.object({
@@ -48,10 +47,17 @@ async function resolveUserRole(userId: string) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: db ? DrizzleAdapter(db, authSchema) : undefined,
-  session: { strategy: db ? "database" : "jwt" },
+  session: { strategy: "jwt" },
   pages: {
     signIn: "/sign-in",
+  },
+  logger: {
+    error(error) {
+      console.error("[auth:error]", error);
+    },
+    warn(code) {
+      console.warn("[auth:warn]", code);
+    },
   },
   providers: [
     Credentials({
@@ -95,13 +101,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
-      const role = (user as { role?: AuthUserRole }).role ?? "student_user";
+    async jwt({ token, user }) {
+      const mutableToken = token as typeof token & {
+        uid?: string;
+        role?: AuthUserRole;
+        scopedCompetitionIds?: string[];
+      };
+      if (user) {
+        mutableToken.uid = user.id;
+        mutableToken.role = (user as { role?: AuthUserRole }).role ?? "student_user";
+        mutableToken.scopedCompetitionIds =
+          (user as { scopedCompetitionIds?: string[] }).scopedCompetitionIds ?? [];
+      }
+      return mutableToken;
+    },
+    async session({ session, token }) {
+      const typedToken = token as typeof token & {
+        uid?: string;
+        role?: AuthUserRole;
+        scopedCompetitionIds?: string[];
+      };
+
+      const role = typedToken.role ?? "student_user";
       const scopedCompetitionIds =
-        (user as { scopedCompetitionIds?: string[] }).scopedCompetitionIds ?? [];
+        typedToken.scopedCompetitionIds ?? [];
+      const userId = typedToken.uid ?? typedToken.sub;
 
       if (session.user) {
-        session.user.id = user.id;
+        session.user.id = userId ?? "";
         session.user.role = role;
         session.user.scopedCompetitionIds = scopedCompetitionIds;
       }
