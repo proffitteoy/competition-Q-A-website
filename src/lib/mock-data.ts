@@ -1,16 +1,20 @@
 export type CompetitionStatus =
+  | "draft"
   | "registration_open"
   | "upcoming"
   | "in_progress"
-  | "finished";
+  | "finished"
+  | "archived";
 
 export type RegistrationMode = "individual" | "team";
 
 export type ApplicationStatus =
+  | "draft"
   | "submitted"
   | "approved"
   | "rejected"
-  | "withdrawn";
+  | "withdrawn"
+  | "cancelled";
 
 export type UserRole =
   | "super_admin"

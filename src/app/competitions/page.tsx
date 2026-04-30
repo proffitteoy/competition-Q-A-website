@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { CompetitionCard } from "@/components/competitions/competition-card";
 import { CompetitionFilterBar } from "@/components/competitions/competition-filter-bar";
@@ -10,13 +11,49 @@ import { Section } from "@/components/marketing/section";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import {
-  competitions,
+  type Competition,
   type CompetitionStatus,
 } from "@/lib/mock-data";
 
 export default function CompetitionsPage() {
+  const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<CompetitionStatus | "all">("all");
+
+  useEffect(() => {
+    let active = true;
+
+    const run = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/competitions", {
+          method: "GET",
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          throw new Error("加载比赛列表失败");
+        }
+        const payload = (await response.json()) as { competitions: Competition[] };
+        if (active) {
+          setCompetitions(payload.competitions ?? []);
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "加载比赛列表失败";
+        toast.error(message);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filteredCompetitions = useMemo(() => {
     return competitions.filter((competition) => {
@@ -28,7 +65,7 @@ export default function CompetitionsPage() {
       const matchesStatus = status === "all" || competition.status === status;
       return matchesKeyword && matchesStatus;
     });
-  }, [keyword, status]);
+  }, [competitions, keyword, status]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,7 +83,11 @@ export default function CompetitionsPage() {
             onKeywordChange={setKeyword}
             onStatusChange={setStatus}
           />
-          {filteredCompetitions.length ? (
+          {loading ? (
+            <div className="rounded-2xl border border-dashed border-border/70 p-8 text-sm text-muted-foreground">
+              加载比赛数据中...
+            </div>
+          ) : filteredCompetitions.length ? (
             <div className="grid gap-4 xl:grid-cols-2">
               {filteredCompetitions.map((competition) => (
                 <CompetitionCard key={competition.id} competition={competition} />

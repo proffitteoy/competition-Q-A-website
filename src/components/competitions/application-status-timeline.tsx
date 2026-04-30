@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock3, FileWarning, RotateCcw } from "lucide-react";
+import { Ban, CheckCircle2, Clock3, FileWarning, RotateCcw } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ApplicationRecord } from "@/lib/mock-data";
@@ -6,6 +6,10 @@ import type { ApplicationRecord } from "@/lib/mock-data";
 const statusMeta = {
   submitted: {
     label: "待审核",
+    icon: Clock3,
+  },
+  draft: {
+    label: "草稿",
     icon: Clock3,
   },
   approved: {
@@ -20,6 +24,10 @@ const statusMeta = {
     label: "已撤回",
     icon: RotateCcw,
   },
+  cancelled: {
+    label: "已取消",
+    icon: Ban,
+  },
 };
 
 interface ApplicationStatusTimelineProps {
@@ -31,6 +39,7 @@ export function ApplicationStatusTimeline({
 }: ApplicationStatusTimelineProps) {
   const meta = statusMeta[application.status];
   const StatusIcon = meta.icon;
+  const modeLabel = application.mode === "team" ? "团队报名" : "个人报名";
 
   return (
     <Card className="border-border/70">
@@ -38,7 +47,7 @@ export function ApplicationStatusTimeline({
         <div className="space-y-2">
           <CardTitle className="text-xl">{application.competitionTitle}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            提交时间：{application.submittedAt} · {application.mode === "team" ? "团队报名" : "个人报名"}
+            提交时间：{application.submittedAt} · {modeLabel}
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-border/70 bg-muted px-3 py-1 text-sm font-medium">

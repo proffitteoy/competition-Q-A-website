@@ -29,6 +29,7 @@
 7. [状态流转矩阵](./状态流转矩阵.md)
 8. [MVP 与迭代路线](./MVP与迭代路线.md)
 9. [视觉与交互规范](./视觉与交互规范.md)
+10. [当前已实现功能清单](./当前已实现功能清单.md)
 
 ## 当前结论
 
@@ -42,6 +43,34 @@
 - 阶段 2 的默认后端路线已固定为：`Next.js 单体 + PostgreSQL + Drizzle + Auth.js + S3 兼容对象存储`。
 - 当前代码骨架已落到仓库根目录的 `src/` 与 `public/`，外部开源目录转为上游来源和待清理对象。
 - 根项目路由已完成首轮去模板化清理，主业务路由聚焦竞赛门户、报名、登录和管理员工作台，同时保留认证与错误页基础路由。
+
+## 当前实现进展（阶段 2）
+
+- 已引入 `PostgreSQL + Drizzle ORM + Auth.js` 基础工程结构：
+  - `src/lib/db/`：数据库配置、schema、seed 脚本
+  - `src/lib/auth/`：Auth.js 配置与会话读取
+  - `src/server/permissions/`：比赛作用域权限检查
+  - `src/server/services/`：报名与比赛状态流转服务
+  - `src/actions/`：Server Actions 入口（学生提交、我的报名、管理员审核）
+- 后台报名工作台已补齐：
+  - 筛选（关键词 / 状态 / 比赛）
+  - 批量处理（通过 / 驳回 / 取消）
+  - 导出 `CSV / XLSX`
+- `/admin/schedule` 已改为读取数据层，而非直接读取 mock 常量。
+
+### 本地命令
+
+- `npm run db:generate`：生成 migration（Drizzle）
+- `npm run db:migrate`：执行 migration
+- `npm run db:migrate:sql`：执行手工 SQL 迁移（受限环境兜底）
+- `npm run db:push`：直接推送 schema（开发环境）
+- `npm run db:seed`：写入 MVP 初始数据
+
+### 无数据库时的开发兜底（2026-04）
+
+- 若未配置 `DATABASE_URL`（且未配置 `PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD`），前台与查询类页面会自动回退到 `src/lib/mock-data.ts` 的只读数据。
+- 写操作（如报名提交、审核、创建比赛）在无数据库模式下会返回明确错误，避免误以为数据已持久化。
+- 需要验证真实报名与审核链路时，仍应先完成数据库配置与迁移/seed。
 
 ## 与旧文档的关系
 

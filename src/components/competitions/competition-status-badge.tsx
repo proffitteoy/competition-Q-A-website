@@ -6,6 +6,10 @@ const statusMap: Record<
   CompetitionStatus,
   { label: string; className: string }
 > = {
+  draft: {
+    label: "草稿",
+    className: "border-zinc-500/30 bg-zinc-500/10 text-zinc-700 dark:text-zinc-300",
+  },
   registration_open: {
     label: "报名中",
     className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
@@ -20,6 +24,10 @@ const statusMap: Record<
   },
   finished: {
     label: "已结束",
+    className: "border-border bg-muted text-muted-foreground",
+  },
+  archived: {
+    label: "已归档",
     className: "border-border bg-muted text-muted-foreground",
   },
 };

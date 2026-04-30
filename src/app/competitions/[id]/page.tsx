@@ -12,7 +12,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { getCompetitionById } from "@/lib/mock-data";
+import { getCompetitionById } from "@/server/repositories/competition-repository";
 
 export default async function CompetitionDetailPage({
   params,
@@ -20,7 +20,7 @@ export default async function CompetitionDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const competition = getCompetitionById(id);
+  const competition = await getCompetitionById(id);
 
   if (!competition) {
     notFound();

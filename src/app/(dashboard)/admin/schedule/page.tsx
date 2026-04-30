@@ -1,8 +1,10 @@
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { competitions } from "@/lib/mock-data";
+import { listCompetitions } from "@/server/repositories/competition-repository";
 
-export default function AdminSchedulePage() {
+export default async function AdminSchedulePage() {
+  const competitions = await listCompetitions();
+
   return (
     <div className="px-4 lg:px-6">
       <div className="space-y-8">

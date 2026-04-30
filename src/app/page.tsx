@@ -1,5 +1,3 @@
-import { competitions } from "@/lib/mock-data";
-
 import { CompetitionCard } from "@/components/competitions/competition-card";
 import { PortalFaq } from "@/components/marketing/portal-faq";
 import { PortalFeatureGrid } from "@/components/marketing/portal-feature-grid";
@@ -8,8 +6,11 @@ import { PortalHero } from "@/components/marketing/portal-hero";
 import { PortalNavbar } from "@/components/marketing/portal-navbar";
 import { PortalStats } from "@/components/marketing/portal-stats";
 import { Section } from "@/components/marketing/section";
+import { listCompetitions } from "@/server/repositories/competition-repository";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const competitions = await listCompetitions();
+
   return (
     <div className="min-h-screen bg-background">
       <PortalNavbar />
