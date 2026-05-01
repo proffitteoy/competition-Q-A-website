@@ -7,11 +7,11 @@ import { compare } from "bcryptjs";
 import { getDb } from "@/lib/db/client";
 import { isDatabaseConfigured } from "@/lib/db/config";
 import { roleAssignments, users } from "@/lib/db/schema";
-import type { UserRole } from "@/lib/mock-data";
+import type { UserRole } from "@/lib/types";
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("邮箱格式错误"),
-  password: z.string().min(6, "密码至少 6 位"),
+  password: z.string().min(8, "密码至少 8 位"),
 });
 
 type AuthUserRole = UserRole;

@@ -29,6 +29,7 @@ import {
   roleAssignments,
   users,
 } from "@/lib/db/schema";
+import { formatAppDateTime } from "@/lib/date-time";
 import { isActiveRegistration } from "@/server/services/application-status-service";
 
 type RegistrationStatus = ApplicationRecord["status"];
@@ -44,16 +45,6 @@ const ACTIVE_REGISTRATION_STATUSES: RegistrationStatus[] = [
 
 const MOCK_WRITE_DISABLED_MESSAGE =
   "数据库未配置，写操作已禁用。";
-
-function formatDateTime(value: Date | null | undefined) {
-  if (!value) return "未提交";
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
-  const hour = String(value.getHours()).padStart(2, "0");
-  const minute = String(value.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hour}:${minute}`;
-}
 
 function defaultNoteByStatus(status: RegistrationStatus) {
   if (status === "draft") return "草稿未提交。";
@@ -469,7 +460,7 @@ async function queryApplications(filters: QueryFilters = {}) {
     college: row.applicantCollege ?? "-",
     major: row.applicantMajor ?? "-",
     grade: row.applicantGrade ?? "-",
-    submittedAt: formatDateTime(row.submittedAt),
+    submittedAt: formatAppDateTime(row.submittedAt, "未提交"),
     mode: row.applyMode,
     status: row.status,
     reviewer: row.reviewerName ?? "待分配",
@@ -753,7 +744,7 @@ export async function listRegistrationAuditLogsByApplicationIds(
     toStatus: item.toStatus,
     action: item.action,
     comment: item.comment,
-    createdAt: formatDateTime(item.createdAt),
+    createdAt: formatAppDateTime(item.createdAt),
     operatorName: item.operatorName ?? "系统",
   }));
 }

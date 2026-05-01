@@ -1,7 +1,7 @@
 import type { SaveUploadedFileInput, UploadedFileMeta } from "@/lib/storage/types";
 
-import { saveLocalFile } from "./local-storage";
-import { saveS3File } from "./s3-storage";
+import { readLocalFileByStorageKey, saveLocalFile } from "./local-storage";
+import { readS3File, saveS3File } from "./s3-storage";
 
 export type StorageDriver = "local" | "s3";
 
@@ -11,6 +11,14 @@ function resolveStorageDriver(): StorageDriver {
     return raw;
   }
   throw new Error(`Unsupported UPLOAD_STORAGE_DRIVER: ${raw}`);
+}
+
+export async function readUploadedFile(storageKey: string): Promise<Buffer> {
+  const driver = resolveStorageDriver();
+  if (driver === "s3") {
+    return readS3File(storageKey);
+  }
+  return readLocalFileByStorageKey(storageKey);
 }
 
 export async function saveUploadedFile(

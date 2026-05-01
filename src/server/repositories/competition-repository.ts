@@ -13,15 +13,11 @@ import {
   competitionFaqs,
   competitions as competitionsTable,
 } from "@/lib/db/schema";
-
-function toDateString(value: Date | null | undefined) {
-  if (!value) return "TBD";
-  return value.toISOString().slice(0, 10);
-}
+import { formatAppDate } from "@/lib/date-time";
 
 function buildWindow(startAt: Date | null | undefined, endAt: Date | null | undefined) {
   if (!startAt && !endAt) return "TBD";
-  return `${toDateString(startAt)} to ${toDateString(endAt)}`;
+  return `${formatAppDate(startAt)} to ${formatAppDate(endAt)}`;
 }
 
 function slugify(input: string) {

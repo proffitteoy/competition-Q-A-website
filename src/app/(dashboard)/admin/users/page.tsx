@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { UserRole } from "@/lib/mock-data";
+import type { UserRole } from "@/lib/types";
 
 type UserStatus = "active" | "pending_verification" | "disabled";
 

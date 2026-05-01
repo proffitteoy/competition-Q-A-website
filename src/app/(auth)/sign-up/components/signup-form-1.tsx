@@ -28,6 +28,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
+function sanitizeCallbackUrl(raw: string | null): string {
+  const fallback = "/";
+  if (!raw) return fallback;
+  try {
+    const url = new URL(raw, window.location.origin);
+    if (url.origin !== window.location.origin) return fallback;
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return fallback;
+  }
+}
+
 const signupFormSchema = z
   .object({
     name: z.string().min(2, "请输入姓名"),
@@ -35,8 +47,12 @@ const signupFormSchema = z
       .string()
       .regex(/^\d{9}$/, "学号必须为9位数字"),
     email: z.string().email("请输入有效的邮箱地址"),
-    password: z.string().min(6, "密码至少需要6个字符"),
-    confirmPassword: z.string().min(6, "请再次输入密码"),
+    password: z
+      .string()
+      .min(8, "密码至少需要8个字符")
+      .regex(/[A-Za-z]/, "密码需包含字母")
+      .regex(/\d/, "密码需包含数字"),
+    confirmPassword: z.string().min(8, "请再次输入密码"),
     terms: z.boolean().refine((value) => value, "请同意平台使用条款"),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -90,7 +106,7 @@ export function SignupForm1({
         throw new Error(registerPayload.message ?? "注册失败");
       }
 
-      const callbackUrl = searchParams.get("callbackUrl") ?? "/admin";
+      const callbackUrl = sanitizeCallbackUrl(searchParams.get("callbackUrl"));
       const signInResult = await signIn("credentials", {
         email: data.email,
         password: data.password,
@@ -105,7 +121,8 @@ export function SignupForm1({
       }
 
       toast.success("注册成功，已自动登录");
-      router.push(signInResult.url ?? callbackUrl);
+      const target = signInResult.url ? sanitizeCallbackUrl(signInResult.url) : callbackUrl;
+      router.push(target);
       router.refresh();
     } catch (error) {
       const message = error instanceof Error ? error.message : "注册失败";

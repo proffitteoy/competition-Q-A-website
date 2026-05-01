@@ -1,4 +1,4 @@
-import type { UserRole } from "@/lib/mock-data";
+import type { UserRole } from "@/lib/types";
 
 export interface SessionUser {
   id?: string;
@@ -33,9 +33,12 @@ function resolveFallbackRole() {
 }
 
 function shouldAllowEnvFallback() {
+  if (process.env.NODE_ENV === "production") {
+    return false;
+  }
   return parseBooleanEnv(
     process.env.MVP_ALLOW_ENV_SESSION_FALLBACK,
-    process.env.NODE_ENV !== "production",
+    true,
   );
 }
 

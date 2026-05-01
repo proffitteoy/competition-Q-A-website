@@ -11,7 +11,11 @@ const registerSchema = z.object({
   name: z.string().min(2, "请输入姓名"),
   studentId: z.string().regex(/^\d{9}$/, "学号必须为9位数字"),
   email: z.string().trim().toLowerCase().email("请输入有效邮箱"),
-  password: z.string().min(6, "密码至少需要 6 位"),
+  password: z
+    .string()
+    .min(8, "密码至少需要 8 位")
+    .regex(/[A-Za-z]/, "密码需包含字母")
+    .regex(/\d/, "密码需包含数字"),
 });
 
 export async function POST(request: Request) {
@@ -30,17 +34,17 @@ export async function POST(request: Request) {
       where: eq(users.email, body.email),
     });
     if (emailExists) {
-      return NextResponse.json({ message: "该邮箱已注册" }, { status: 409 });
+      return NextResponse.json({ message: "该邮箱或学号已注册" }, { status: 409 });
     }
 
     const studentExists = await db.query.users.findFirst({
       where: eq(users.studentNo, body.studentId),
     });
     if (studentExists) {
-      return NextResponse.json({ message: "该学号已注册" }, { status: 409 });
+      return NextResponse.json({ message: "该邮箱或学号已注册" }, { status: 409 });
     }
 
-    const passwordHash = await hash(body.password, 10);
+    const passwordHash = await hash(body.password, 12);
     const created = await db
       .insert(users)
       .values({
@@ -74,7 +78,11 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "注册失败";
-    return NextResponse.json({ message }, { status: 400 });
+    if (error instanceof z.ZodError) {
+      const message = error.issues.map((e) => e.message).join("；");
+      return NextResponse.json({ message }, { status: 400 });
+    }
+    console.error("[register] failed:", error);
+    return NextResponse.json({ message: "注册失败，请稍后重试" }, { status: 500 });
   }
 }

@@ -1,9 +1,11 @@
 import Link from "next/link";
 
+import { FadeInOnScroll } from "@/components/motion/fade-in-on-scroll";
+
 export function PortalFooter() {
   return (
     <footer className="border-t border-slate-200/70 bg-[linear-gradient(180deg,#faf8f2_0%,#f5f1e8_100%)]">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-[1.5fr_1fr_1fr] md:px-6">
+      <FadeInOnScroll direction="up" className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-[1.5fr_1fr_1fr] md:px-6">
         <div className="space-y-3">
           <p className="text-xs font-semibold tracking-[0.24em] text-slate-500 uppercase">
             学院竞赛门户
@@ -26,7 +28,7 @@ export function PortalFooter() {
           <div className="flex flex-col gap-2 text-sm text-slate-600">
             <Link href="/competitions">比赛列表</Link>
             <Link href="/#latest-notices">通知公告</Link>
-            <Link href="/#resource-library">报名资料</Link>
+            <Link href="/#hall-of-fame">名人堂</Link>
             <Link href="/me/applications">我的报名</Link>
           </div>
         </div>
@@ -38,7 +40,7 @@ export function PortalFooter() {
             <span>工作日 09:00 - 17:30</span>
           </div>
         </div>
-      </div>
+      </FadeInOnScroll>
     </footer>
   );
 }

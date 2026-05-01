@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, LogOut, ScrollText, Trophy } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 
 import type { UserRole } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
@@ -20,21 +21,81 @@ const navLinks = [
   { href: "/#hall-of-fame", label: "名人堂" },
 ];
 
+interface PortalCurrentUser {
+  name: string;
+  role: UserRole;
+}
+
 interface PortalNavbarProps {
-  currentUser?:
-    | {
-        name: string;
-        role: UserRole;
-      }
-    | null;
+  currentUser?: PortalCurrentUser | null;
 }
 
 function canAccessAdmin(role: UserRole) {
   return role === "super_admin" || role === "competition_admin" || role === "content_editor";
 }
 
-export function PortalNavbar({ currentUser = null }: PortalNavbarProps) {
-  const showAdminEntry = currentUser ? canAccessAdmin(currentUser.role) : false;
+function isHashNavigation(href: string) {
+  return href.includes("#");
+}
+
+function PortalNavLink({
+  href,
+  label,
+  className,
+}: {
+  href: string;
+  label: string;
+  className: string;
+}) {
+  if (isHashNavigation(href)) {
+    return (
+      <a href={href} className={className}>
+        {label}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {label}
+    </Link>
+  );
+}
+
+export function PortalNavbar({ currentUser }: PortalNavbarProps) {
+  const [clientUser, setClientUser] = useState<PortalCurrentUser | null>(null);
+  const resolvedUser = currentUser === undefined ? clientUser : currentUser;
+  const showAdminEntry = resolvedUser ? canAccessAdmin(resolvedUser.role) : false;
+
+  useEffect(() => {
+    let active = true;
+
+    if (currentUser !== undefined) {
+      return () => {
+        active = false;
+      };
+    }
+
+    void getSession().then((session) => {
+      if (!active) return;
+
+      const sessionUser = session?.user;
+      const role = (sessionUser as { role?: UserRole } | undefined)?.role;
+      if (!sessionUser?.name || !role) {
+        setClientUser(null);
+        return;
+      }
+
+      setClientUser({
+        name: sessionUser.name,
+        role,
+      });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [currentUser]);
 
   async function handleSignOut() {
     await signOut({ callbackUrl: "/" });
@@ -57,25 +118,24 @@ export function PortalNavbar({ currentUser = null }: PortalNavbarProps) {
 
         <nav className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
-            <Link
+            <PortalNavLink
               key={link.href}
               href={link.href}
+              label={link.label}
               className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-950"
-            >
-              {link.label}
-            </Link>
+            />
           ))}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          {currentUser ? (
+          {resolvedUser ? (
             <>
               <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-white/90 px-4 py-2 shadow-sm">
                 <div className="flex size-8 items-center justify-center rounded-full bg-amber-100 text-amber-900">
                   <ScrollText className="size-4" />
                 </div>
                 <div className="leading-tight">
-                  <p className="text-sm font-semibold text-slate-950">{currentUser.name}</p>
+                  <p className="text-sm font-semibold text-slate-950">{resolvedUser.name}</p>
                   <p className="text-xs text-slate-500">
                     {showAdminEntry ? "已登录，可进入管理台" : "已登录，可查看报名进度"}
                   </p>
@@ -133,19 +193,18 @@ export function PortalNavbar({ currentUser = null }: PortalNavbarProps) {
             <SheetTitle>学院竞赛中心</SheetTitle>
             <div className="mt-8 flex flex-col gap-5">
               {navLinks.map((link) => (
-                <Link
+                <PortalNavLink
                   key={link.href}
                   href={link.href}
+                  label={link.label}
                   className="text-base font-medium text-slate-950"
-                >
-                  {link.label}
-                </Link>
+                />
               ))}
               <Link
-                href={currentUser ? "/me/applications" : "/sign-in"}
+                href={resolvedUser ? "/me/applications" : "/sign-in"}
                 className="text-base font-medium text-slate-950"
               >
-                {currentUser ? "我的报名" : "登录"}
+                {resolvedUser ? "我的报名" : "登录"}
               </Link>
               {showAdminEntry ? (
                 <Link href="/admin" className="text-base font-medium text-slate-950">
@@ -153,7 +212,7 @@ export function PortalNavbar({ currentUser = null }: PortalNavbarProps) {
                 </Link>
               ) : null}
               <div className="mt-4 flex flex-col gap-3">
-                {currentUser ? (
+                {resolvedUser ? (
                   <Button
                     variant="outline"
                     type="button"

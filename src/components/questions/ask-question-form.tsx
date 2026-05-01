@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { askQuestionAction } from "@/actions/questions";
 
 interface AskQuestionFormProps {
   competitionId: string;
@@ -18,6 +18,7 @@ export function AskQuestionForm({
   competitionId,
   onSuccess,
 }: AskQuestionFormProps) {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [error, setError] = useState("");
@@ -28,14 +29,26 @@ export function AskQuestionForm({
     setError("");
     startTransition(async () => {
       try {
-        await askQuestionAction({
-          competitionId,
-          title: title.trim(),
-          body: body.trim(),
+        const response = await fetch("/api/questions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            competitionId,
+            title: title.trim(),
+            body: body.trim(),
+          }),
         });
+        const payload = (await response.json()) as { message?: string };
+        if (!response.ok) {
+          throw new Error(payload.message ?? "提交失败，请重试。");
+        }
+
         setTitle("");
         setBody("");
         toast.success("问题已发布");
+        router.refresh();
         onSuccess?.();
       } catch (err) {
         setError(err instanceof Error ? err.message : "提交失败，请重试。");

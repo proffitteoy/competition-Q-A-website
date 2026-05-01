@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 import type { SaveUploadedFileInput, UploadedFileMeta } from "@/lib/storage/types";
 
@@ -75,6 +75,25 @@ function buildPublicUrl(storageKey: string, publicBaseUrl: string, bucket: strin
   }
 
   return `s3://${bucket}/${storageKey}`;
+}
+
+export async function readS3File(storageKey: string): Promise<Buffer> {
+  const config = getS3Config();
+  const client = getS3Client();
+  const response = await client.send(
+    new GetObjectCommand({
+      Bucket: config.bucket,
+      Key: storageKey,
+    }),
+  );
+  if (!response.Body) {
+    throw new Error("S3 object body is empty.");
+  }
+  const chunks: Uint8Array[] = [];
+  for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
 }
 
 export async function saveS3File(

@@ -135,49 +135,49 @@ export default function AdminHomePage() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatsCard
             label="比赛总数"
-            value={String(payload.stats.competitions)}
+            value={loading ? "--" : String(payload.stats.competitions)}
             description="当前纳管的比赛记录总数"
             icon={<Trophy className="size-5 text-primary" />}
           />
           <StatsCard
             label="报名总数"
-            value={String(payload.stats.applications)}
+            value={loading ? "--" : String(payload.stats.applications)}
             description="累计报名申请记录"
             icon={<ClipboardCheck className="size-5 text-primary" />}
           />
           <StatsCard
             label="通知总数"
-            value={String(payload.stats.notices)}
+            value={loading ? "--" : String(payload.stats.notices)}
             description="已发布与草稿通知总计"
             icon={<Megaphone className="size-5 text-primary" />}
           />
           <StatsCard
             label="用户总数"
-            value={String(payload.stats.users)}
+            value={loading ? "--" : String(payload.stats.users)}
             description="含角色授权的用户账号"
             icon={<Users className="size-5 text-primary" />}
           />
           <StatsCard
             label="活跃比赛"
-            value={String(payload.stats.activeCompetitions)}
+            value={loading ? "--" : String(payload.stats.activeCompetitions)}
             description="即将开始或报名中的比赛"
             icon={<Activity className="size-5 text-primary" />}
           />
           <StatsCard
             label="待审核报名"
-            value={String(payload.stats.pendingReviews)}
+            value={loading ? "--" : String(payload.stats.pendingReviews)}
             description="尚未完成审核的报名记录"
             icon={<ListChecks className="size-5 text-primary" />}
           />
           <StatsCard
             label="本周新增"
-            value={String(payload.stats.thisWeekSubmissions)}
+            value={loading ? "--" : String(payload.stats.thisWeekSubmissions)}
             description="近 7 天新增报名数"
             icon={<ClipboardCheck className="size-5 text-primary" />}
           />
           <StatsCard
             label="通过率"
-            value={`${payload.stats.approvalRate}%`}
+            value={loading ? "--" : `${payload.stats.approvalRate}%`}
             description="已通过 /（已通过 + 已驳回）"
             icon={<ShieldCheck className="size-5 text-primary" />}
           />

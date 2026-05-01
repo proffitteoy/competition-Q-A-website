@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Competition, CompetitionStatus, RegistrationMode } from "@/lib/mock-data";
+import type { Competition, CompetitionStatus, RegistrationMode } from "@/lib/types";
 
 interface CompetitionFormValues {
   title: string;

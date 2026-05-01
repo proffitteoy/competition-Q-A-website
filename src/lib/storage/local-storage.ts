@@ -1,5 +1,6 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import os from "node:os";
 import { randomUUID } from "node:crypto";
 
 import type { SaveUploadedFileInput, UploadedFileMeta } from "@/lib/storage/types";
@@ -23,7 +24,38 @@ function resolveUploadRootDir() {
   if (fromEnv) {
     return path.resolve(fromEnv);
   }
-  return path.join(process.cwd(), "public", "uploads");
+  if (process.env.NODE_ENV === "production") {
+    console.warn(
+      "[storage] UPLOAD_LOCAL_DIR is not set — using OS tmpdir. Uploaded files may be lost on restart.",
+    );
+    return path.join(os.tmpdir(), "competition-qa-platform", "uploads");
+  }
+  return path.join(process.cwd(), ".uploads");
+}
+
+export function buildLocalFilePublicUrl(storageKey: string) {
+  return `/api/uploads?key=${encodeURIComponent(storageKey)}`;
+}
+
+export function resolveLocalFilePath(storageKey: string) {
+  const normalized = storageKey.replace(/\\/g, "/");
+  if (!normalized.startsWith("uploads/")) {
+    throw new Error("Invalid local storage key.");
+  }
+
+  const rootDir = path.resolve(resolveUploadRootDir());
+  const relativePath = normalized.slice("uploads/".length);
+  const absolutePath = path.resolve(rootDir, relativePath);
+
+  if (absolutePath !== rootDir && !absolutePath.startsWith(`${rootDir}${path.sep}`)) {
+    throw new Error("Invalid local storage path.");
+  }
+
+  return absolutePath;
+}
+
+export async function readLocalFileByStorageKey(storageKey: string) {
+  return readFile(resolveLocalFilePath(storageKey));
 }
 
 export async function saveLocalFile(
@@ -55,7 +87,7 @@ export async function saveLocalFile(
     originalName,
     storedName,
     storageKey,
-    publicUrl: `/${storageKey}`,
+    publicUrl: buildLocalFilePublicUrl(storageKey),
     sizeBytes: bytes.byteLength,
     mimeType: input.file.type || "application/octet-stream",
   };

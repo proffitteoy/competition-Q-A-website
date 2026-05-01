@@ -1,4 +1,4 @@
-import type { UserRole } from "@/lib/mock-data";
+import type { UserRole } from "@/lib/types";
 
 export const adminRoles: UserRole[] = ["super_admin", "competition_admin"];
 

@@ -27,9 +27,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
+function sanitizeCallbackUrl(raw: string | null): string {
+  const fallback = "/";
+  if (!raw) return fallback;
+  try {
+    const url = new URL(raw, window.location.origin);
+    if (url.origin !== window.location.origin) return fallback;
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return fallback;
+  }
+}
+
 const loginFormSchema = z.object({
   email: z.string().email("请输入有效的邮箱地址"),
-  password: z.string().min(6, "密码至少需要6个字符"),
+  password: z.string().min(8, "密码至少需要8个字符"),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -53,7 +65,7 @@ export function LoginForm1({
   async function onSubmit(data: LoginFormValues) {
     setSubmitting(true);
     try {
-      const callbackUrl = searchParams.get("callbackUrl") ?? "/admin";
+      const callbackUrl = sanitizeCallbackUrl(searchParams.get("callbackUrl"));
       const result = await signIn("credentials", {
         ...data,
         redirect: false,
@@ -66,7 +78,8 @@ export function LoginForm1({
       }
 
       toast.success("登录成功");
-      router.push(result.url ?? callbackUrl);
+      const target = result.url ? sanitizeCallbackUrl(result.url) : callbackUrl;
+      router.push(target);
       router.refresh();
     } catch (error) {
       const message = error instanceof Error ? error.message : "登录失败";

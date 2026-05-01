@@ -1,10 +1,9 @@
-import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
 import { isDatabaseConfigured } from "@/lib/db/config";
 import {
   mockQuestions,
-  type QuestionRecord,
   type QuestionStatus,
 } from "@/lib/mock-data";
 import { questions, users } from "@/lib/db/schema";
@@ -188,7 +187,7 @@ export async function createQuestion(input: CreateQuestionInput) {
       answerCount: 0,
       createdAt: now,
     };
-    mockQuestions.unshift(mock as any);
+    mockQuestions.unshift(mock);
     return mock;
   }
 

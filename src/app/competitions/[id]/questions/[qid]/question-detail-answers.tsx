@@ -43,7 +43,7 @@ export function QuestionDetailAnswers({
   canAccept,
   isLoggedIn,
 }: QuestionDetailAnswersProps) {
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   function handleAccept(answerId: string) {
     startTransition(async () => {

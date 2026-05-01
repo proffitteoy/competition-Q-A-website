@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ApplicationRecord } from "@/lib/mock-data";
+import type { ApplicationRecord } from "@/lib/types";
 
 const statusText: Record<ApplicationRecord["status"], string> = {
   draft: "草稿",

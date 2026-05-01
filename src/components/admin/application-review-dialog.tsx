@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import type { ApplicationRecord } from "@/lib/mock-data";
+import type { ApplicationRecord } from "@/lib/types";
 
 interface ApplicationReviewDialogProps {
   application: ApplicationRecord;
@@ -25,6 +25,7 @@ export function ApplicationReviewDialog({
   application,
   onUpdated,
 }: ApplicationReviewDialogProps) {
+  const [open, setOpen] = useState(false);
   const [note, setNote] = useState(application.note || "");
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
@@ -58,6 +59,7 @@ export function ApplicationReviewDialog({
               ? "撤回审核"
               : "取消报名";
       toast.success(`${actionLabel}已提交`);
+      setOpen(false);
       onUpdated?.();
     } catch (error) {
       const message = error instanceof Error ? error.message : "审核操作失败";
@@ -68,7 +70,7 @@ export function ApplicationReviewDialog({
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
           审核
@@ -101,6 +103,7 @@ export function ApplicationReviewDialog({
             onChange={(event) => setNote(event.target.value)}
             rows={5}
             placeholder="填写审核意见或补充说明"
+            aria-label="审核意见"
           />
         </div>
 
@@ -110,21 +113,21 @@ export function ApplicationReviewDialog({
             disabled={loadingAction !== null}
             onClick={() => submitReview("reject", "请按要求补充报名材料")}
           >
-            驳回补充
+            {loadingAction === "reject" ? "提交中..." : "驳回补充"}
           </Button>
           <Button
             variant="secondary"
             disabled={loadingAction !== null}
             onClick={() => submitReview("withdraw", "该记录已撤回到学生侧")}
           >
-            撤回审核
+            {loadingAction === "withdraw" ? "提交中..." : "撤回审核"}
           </Button>
           <Button
             variant="outline"
             disabled={loadingAction !== null}
             onClick={() => submitReview("cancel", "该记录已由管理员取消")}
           >
-            取消报名
+            {loadingAction === "cancel" ? "提交中..." : "取消报名"}
           </Button>
           <Button
             disabled={loadingAction !== null}

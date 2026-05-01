@@ -29,7 +29,7 @@ export default async function QuestionsPage({
 
   const isLoggedIn = !!session?.user;
   const currentUser = session?.user
-    ? { name: session.user.name ?? "未命名用户", role: (session.user as any).role ?? "student_user" }
+    ? { name: session.user.name ?? "未命名用户", role: session.user.role }
     : null;
   const questions = await listQuestionsByCompetition(id);
 

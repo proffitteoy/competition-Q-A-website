@@ -8,6 +8,7 @@ import {
   competitions as mockCompetitions,
 } from "@/lib/mock-data";
 import { competitionNotices, competitions } from "@/lib/db/schema";
+import { formatAppDateTime } from "@/lib/date-time";
 
 const WRITE_DISABLED_MESSAGE =
   "当前未配置数据库，写操作已禁用。请先配置 DATABASE_URL。";
@@ -25,16 +26,6 @@ export interface PublishedNoticeRecord {
   content: string;
   updatedAt: string;
   href: string;
-}
-
-function formatDateTime(value: Date | null | undefined) {
-  if (!value) return "-";
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
-  const hour = String(value.getHours()).padStart(2, "0");
-  const minute = String(value.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hour}:${minute}`;
 }
 
 function mapMockNotice(notice: NoticeRecord): AdminNoticeRecord {
@@ -75,7 +66,7 @@ export async function listNotices() {
     title: row.title,
     competition: row.competitionTitle,
     status: row.status,
-    updatedAt: formatDateTime(row.updatedAt),
+    updatedAt: formatAppDateTime(row.updatedAt),
     content: row.content,
   }));
 }

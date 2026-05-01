@@ -1,6 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
 
-import type { CompetitionStatus, UserRole } from "@/lib/mock-data";
+import type { CompetitionStatus, UserRole } from "@/lib/types";
 import { getDb } from "@/lib/db/client";
 import {
   competitionStatusLogs,

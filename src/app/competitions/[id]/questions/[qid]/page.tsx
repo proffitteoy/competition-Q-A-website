@@ -43,7 +43,7 @@ export default async function QuestionDetailPage({
 
   const isLoggedIn = !!session?.user;
   const userId = session?.user?.id;
-  const userRole = (session?.user as any)?.role;
+  const userRole = session?.user?.role;
   const currentUser = session?.user
     ? { name: session.user.name ?? "未命名用户", role: userRole ?? "student_user" }
     : null;

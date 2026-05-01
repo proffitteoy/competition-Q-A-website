@@ -5,6 +5,7 @@ import { PortalFooter } from "@/components/marketing/portal-footer";
 import { PortalNavbar } from "@/components/marketing/portal-navbar";
 import { Section } from "@/components/marketing/section";
 import { PageHeader } from "@/components/shared/page-header";
+import { auth } from "@/lib/auth/auth";
 import { getCompetitionById } from "@/server/repositories/competition-repository";
 
 export default async function CompetitionApplyPage({
@@ -13,15 +14,22 @@ export default async function CompetitionApplyPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const competition = await getCompetitionById(id);
+  const [competition, session] = await Promise.all([getCompetitionById(id), auth()]);
 
   if (!competition) {
     notFound();
   }
 
+  const currentUser = session?.user
+    ? {
+        name: session.user.name ?? "未命名用户",
+        role: session.user.role,
+      }
+    : null;
+
   return (
     <div className="min-h-screen bg-background">
-      <PortalNavbar />
+      <PortalNavbar currentUser={currentUser} />
       <Section>
         <div className="mx-auto max-w-7xl space-y-8">
           <PageHeader

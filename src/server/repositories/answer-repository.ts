@@ -1,8 +1,8 @@
-import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
 import { isDatabaseConfigured } from "@/lib/db/config";
-import { mockAnswers, mockQuestions, type AnswerRecord } from "@/lib/mock-data";
+import { mockAnswers, mockQuestions } from "@/lib/mock-data";
 import { answers, questions, users } from "@/lib/db/schema";
 
 export interface AnswerWithAuthor {
@@ -74,7 +74,7 @@ export async function createAnswer(input: CreateAnswerInput) {
       isAccepted: false,
       createdAt: now,
     };
-    mockAnswers.push(mock as any);
+    mockAnswers.push(mock);
     const q = mockQuestions.find((q) => q.id === input.questionId);
     if (q) q.answerCount++;
     return mock;

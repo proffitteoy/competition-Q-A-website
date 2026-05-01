@@ -1,4 +1,4 @@
-import type { ApplicationStatus } from "@/lib/mock-data";
+import type { ApplicationStatus } from "@/lib/types";
 
 export type ReviewAction =
   | "submit"

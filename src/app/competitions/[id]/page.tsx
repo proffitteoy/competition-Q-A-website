@@ -32,7 +32,7 @@ export default async function CompetitionDetailPage({
   }
 
   const currentUser = session?.user
-    ? { name: session.user.name ?? "未命名用户", role: (session.user as any).role ?? "student_user" }
+    ? { name: session.user.name ?? "未命名用户", role: session.user.role }
     : null;
 
   return (

@@ -22,7 +22,16 @@ export default async function MyApplicationsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <PortalNavbar />
+      <PortalNavbar
+        currentUser={
+          sessionUser.id
+            ? {
+                name: sessionUser.name,
+                role: sessionUser.role,
+              }
+            : null
+        }
+      />
       <Section>
         <div className="mx-auto max-w-7xl space-y-8">
           <PageHeader
