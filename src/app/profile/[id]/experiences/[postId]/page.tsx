@@ -14,7 +14,7 @@ export default async function ExperiencePostPage({
   params,
 }: ExperiencePostPageProps) {
   const { id, postId } = await params;
-  const post = getPublishedExperiencePost(id, postId);
+  const post = await getPublishedExperiencePost(id, postId);
 
   if (!post) {
     notFound();

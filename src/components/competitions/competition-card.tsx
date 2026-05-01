@@ -56,7 +56,7 @@ export function CompetitionCard({
         <div className="text-sm text-muted-foreground">
           {competition.department} · {competition.location}
         </div>
-        <Button asChild size="sm">
+        <Button asChild size="sm" variant="outline" className="border-slate-300 bg-white/85 text-slate-900 hover:bg-slate-50">
           <Link href={`/competitions/${competition.id}`}>
             查看详情
             <ArrowUpRight className="size-4" />

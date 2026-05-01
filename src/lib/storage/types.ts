@@ -7,7 +7,7 @@ export interface UploadedFileMeta {
   mimeType: string;
 }
 
-export type UploadScope = "registration" | "notice" | "competition";
+export type UploadScope = "registration" | "notice" | "competition" | "avatar" | "experience_cover";
 
 export interface SaveUploadedFileInput {
   file: File;

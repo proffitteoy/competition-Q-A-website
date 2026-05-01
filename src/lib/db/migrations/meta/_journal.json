@@ -22,6 +22,27 @@
       "when": 1746144000000,
       "tag": "0002_add_user_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1746172800000,
+      "tag": "0003_add_experience_post",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777564800000,
+      "tag": "0004_repair_profile_and_notice",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1746201600000,
+      "tag": "0005_add_hall_of_fame",
+      "breakpoints": true
     }
   ]
 }

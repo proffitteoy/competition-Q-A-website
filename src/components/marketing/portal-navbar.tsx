@@ -16,9 +16,6 @@ import {
 
 const navLinks = [
   { href: "/competitions", label: "比赛列表" },
-  { href: "/#latest-notices", label: "通知公告" },
-  { href: "/#resource-library", label: "报名资料" },
-  { href: "/#hall-of-fame", label: "名人堂" },
 ];
 
 interface PortalCurrentUser {

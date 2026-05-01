@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getMissingRelationSetupMessage } from "@/lib/db/errors";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   getMeProfile,
@@ -71,6 +72,16 @@ export async function PUT(request: Request) {
       return NextResponse.json({ message }, { status: 400 });
     }
     console.error("[me/profile] update failed:", error);
+
+    const setupMessage = getMissingRelationSetupMessage(
+      error,
+      "user_profile",
+      "个人资料",
+    );
+    if (setupMessage) {
+      return NextResponse.json({ message: setupMessage }, { status: 503 });
+    }
+
     return NextResponse.json(
       { message: "更新个人资料失败，请稍后重试。" },
       { status: 500 },

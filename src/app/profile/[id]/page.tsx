@@ -12,7 +12,7 @@ interface ProfilePageProps {
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { id } = await params;
-  const profile = getPublicProfile(id);
+  const profile = await getPublicProfile(id);
 
   if (!profile) {
     notFound();

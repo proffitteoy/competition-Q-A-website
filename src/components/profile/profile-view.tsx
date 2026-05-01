@@ -29,6 +29,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { UserTitleBadges } from "@/components/profile/user-title-badges";
+import { AvatarUpload } from "@/components/profile/avatar-upload";
 import type { MeProfileData } from "@/server/repositories/me-profile-repository";
 import type { TitleInfo } from "@/server/services/user-title-service";
 
@@ -44,11 +45,6 @@ const profileSchema = z.object({
   nickname: z.string().max(100).default(""),
   gender: z.enum(["male", "female", "other", ""]).default(""),
   birthday: z.string().default(""),
-  schoolName: z.string().max(200).default(""),
-  department: z.string().max(120).default(""),
-  enrollmentYear: z.string().default(""),
-  educationLevel: z.string().max(64).default(""),
-  inSchoolStatus: z.enum(["yes", "no", "graduated", ""]).default(""),
   publicBio: z.string().max(500).default(""),
   publicShowAvatar: z.boolean().default(true),
   publicShowCollegeMajor: z.boolean().default(true),
@@ -63,12 +59,6 @@ const genderLabels: Record<string, string> = {
   male: "男",
   female: "女",
   other: "其他",
-};
-
-const inSchoolLabels: Record<string, string> = {
-  yes: "在校",
-  no: "不在校",
-  graduated: "已毕业",
 };
 
 function displayValue(value: string | null | undefined, fallback = "未填写") {
@@ -86,11 +76,6 @@ function buildDefaultValues(data: MeProfileData | null): ProfileFormValues {
     nickname: data?.profile?.nickname ?? "",
     gender: data?.profile?.gender ?? "",
     birthday: data?.profile?.birthday ?? "",
-    schoolName: data?.profile?.schoolName ?? "",
-    department: data?.profile?.department ?? "",
-    enrollmentYear: data?.profile?.enrollmentYear?.toString() ?? "",
-    educationLevel: data?.profile?.educationLevel ?? "",
-    inSchoolStatus: data?.profile?.inSchoolStatus ?? "",
     publicBio: data?.profile?.publicBio ?? "",
     publicShowAvatar: data?.profile?.publicShowAvatar ?? true,
     publicShowCollegeMajor: data?.profile?.publicShowCollegeMajor ?? true,
@@ -127,13 +112,6 @@ export function ProfileView({ initialData, titles }: ProfileViewProps) {
         nickname: values.nickname || null,
         gender: values.gender || null,
         birthday: values.birthday || null,
-        schoolName: values.schoolName || null,
-        department: values.department || null,
-        enrollmentYear: values.enrollmentYear
-          ? Number(values.enrollmentYear)
-          : null,
-        educationLevel: values.educationLevel || null,
-        inSchoolStatus: values.inSchoolStatus || null,
         publicBio: values.publicBio || null,
         publicShowAvatar: values.publicShowAvatar,
         publicShowCollegeMajor: values.publicShowCollegeMajor,
@@ -173,7 +151,14 @@ export function ProfileView({ initialData, titles }: ProfileViewProps) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-slate-950">编辑个人资料</h1>
+            <div className="flex items-center gap-4">
+              <AvatarUpload
+                currentImage={data?.user.image ?? null}
+                name={data?.user.name ?? ""}
+                editable
+              />
+              <h1 className="text-xl font-semibold text-slate-950">编辑个人资料</h1>
+            </div>
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -266,7 +251,7 @@ export function ProfileView({ initialData, titles }: ProfileViewProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">学籍与院系信息</CardTitle>
+              <CardTitle className="text-base">学籍信息</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <FormField
@@ -284,38 +269,12 @@ export function ProfileView({ initialData, titles }: ProfileViewProps) {
               />
               <FormField
                 control={form.control}
-                name="schoolName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>学校</FormLabel>
-                    <FormControl>
-                      <Input placeholder="选填" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name="college"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>学院</FormLabel>
                     <FormControl>
                       <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="department"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>院系</FormLabel>
-                    <FormControl>
-                      <Input placeholder="选填" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -343,61 +302,6 @@ export function ProfileView({ initialData, titles }: ProfileViewProps) {
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="enrollmentYear"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>入学年份</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="如 2023"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="educationLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>最高学历</FormLabel>
-                    <FormControl>
-                      <Input placeholder="如 本科" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="inSchoolStatus"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>是否在校</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="请选择" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="yes">在校</SelectItem>
-                        <SelectItem value="no">不在校</SelectItem>
-                        <SelectItem value="graduated">已毕业</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -521,19 +425,25 @@ export function ProfileView({ initialData, titles }: ProfileViewProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-950">我的信息</h1>
+        <div className="flex items-center gap-4">
+          <AvatarUpload
+            currentImage={data?.user.image ?? null}
+            name={data?.user.name ?? ""}
+          />
+          <div>
+            <h1 className="text-xl font-semibold text-slate-950">我的信息</h1>
+            {titles.length > 0 && (
+              <div className="mt-1 flex items-center gap-2">
+                <UserTitleBadges titles={titles} />
+              </div>
+            )}
+          </div>
+        </div>
         <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
           <Pencil className="mr-1 size-4" />
           编辑
         </Button>
       </div>
-
-      {titles.length > 0 && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-500">我的头衔</span>
-          <UserTitleBadges titles={titles} />
-        </div>
-      )}
 
       <Card>
         <CardHeader>
@@ -573,7 +483,7 @@ export function ProfileView({ initialData, titles }: ProfileViewProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">学籍与院系信息</CardTitle>
+          <CardTitle className="text-base">学籍信息</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
@@ -584,21 +494,9 @@ export function ProfileView({ initialData, titles }: ProfileViewProps) {
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-400">学校</dt>
-              <dd className="text-sm text-slate-900">
-                {displayValue(data?.profile?.schoolName)}
-              </dd>
-            </div>
-            <div>
               <dt className="text-xs text-slate-400">学院</dt>
               <dd className="text-sm text-slate-900">
                 {displayValue(data?.user.college)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-400">院系</dt>
-              <dd className="text-sm text-slate-900">
-                {displayValue(data?.profile?.department)}
               </dd>
             </div>
             <div>
@@ -611,26 +509,6 @@ export function ProfileView({ initialData, titles }: ProfileViewProps) {
               <dt className="text-xs text-slate-400">年级</dt>
               <dd className="text-sm text-slate-900">
                 {displayValue(data?.user.grade)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-400">入学年份</dt>
-              <dd className="text-sm text-slate-900">
-                {data?.profile?.enrollmentYear?.toString() ?? "未填写"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-400">最高学历</dt>
-              <dd className="text-sm text-slate-900">
-                {displayValue(data?.profile?.educationLevel)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-400">是否在校</dt>
-              <dd className="text-sm text-slate-900">
-                {data?.profile?.inSchoolStatus
-                  ? inSchoolLabels[data.profile.inSchoolStatus]
-                  : "未填写"}
               </dd>
             </div>
           </dl>

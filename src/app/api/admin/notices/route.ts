@@ -4,6 +4,10 @@ import { z } from "zod";
 import { isContentManagerRole } from "@/lib/auth/authorization";
 import { getSessionUser } from "@/lib/auth/session";
 import {
+  getMissingRelationSetupMessage,
+  isDrizzleQueryError,
+} from "@/lib/db/errors";
+import {
   extractPlainTextFromHtml,
   sanitizeRichTextHtml,
 } from "@/lib/security/html-sanitize";
@@ -19,35 +23,51 @@ const createNoticeSchema = z.object({
 });
 
 export async function GET() {
-  const sessionUser = await getSessionUser();
-  if (!isContentManagerRole(sessionUser.role)) {
-    return NextResponse.json({ message: "Forbidden." }, { status: 403 });
+  try {
+    const sessionUser = await getSessionUser();
+    if (!isContentManagerRole(sessionUser.role)) {
+      return NextResponse.json({ message: "Forbidden." }, { status: 403 });
+    }
+
+    const [notices, competitions] = await Promise.all([
+      listNotices(),
+      listCompetitions(),
+    ]);
+    const scopedCompetitionIds =
+      sessionUser.role === "super_admin"
+        ? null
+        : new Set(sessionUser.scopedCompetitionIds);
+    const visibleNotices =
+      scopedCompetitionIds === null
+        ? notices
+        : notices.filter((item) => scopedCompetitionIds.has(item.competitionId));
+    const visibleCompetitions =
+      scopedCompetitionIds === null
+        ? competitions
+        : competitions.filter((item) => scopedCompetitionIds.has(item.id));
+
+    return NextResponse.json({
+      notices: visibleNotices,
+      competitions: visibleCompetitions.map((item) => ({
+        id: item.id,
+        title: item.title,
+      })),
+    });
+  } catch (error) {
+    console.error("[admin/notices] list failed:", error);
+    const setupMessage = getMissingRelationSetupMessage(
+      error,
+      "competition_notice",
+      "通知",
+    );
+    if (setupMessage) {
+      return NextResponse.json({ message: setupMessage }, { status: 503 });
+    }
+    return NextResponse.json(
+      { message: "加载通知失败，请稍后重试。" },
+      { status: 500 },
+    );
   }
-
-  const [notices, competitions] = await Promise.all([
-    listNotices(),
-    listCompetitions(),
-  ]);
-  const scopedCompetitionIds =
-    sessionUser.role === "super_admin"
-      ? null
-      : new Set(sessionUser.scopedCompetitionIds);
-  const visibleNotices =
-    scopedCompetitionIds === null
-      ? notices
-      : notices.filter((item) => scopedCompetitionIds.has(item.competitionId));
-  const visibleCompetitions =
-    scopedCompetitionIds === null
-      ? competitions
-      : competitions.filter((item) => scopedCompetitionIds.has(item.id));
-
-  return NextResponse.json({
-    notices: visibleNotices,
-    competitions: visibleCompetitions.map((item) => ({
-      id: item.id,
-      title: item.title,
-    })),
-  });
 }
 
 export async function POST(request: Request) {
@@ -80,7 +100,20 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ notice }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to create notice.";
+    console.error("[admin/notices] create failed:", error);
+    const setupMessage = getMissingRelationSetupMessage(
+      error,
+      "competition_notice",
+      "通知",
+    );
+    if (setupMessage) {
+      return NextResponse.json({ message: setupMessage }, { status: 503 });
+    }
+
+    const message =
+      error instanceof Error && !isDrizzleQueryError(error)
+        ? error.message
+        : "创建通知失败，请稍后重试。";
     return NextResponse.json({ message }, { status: 400 });
   }
 }

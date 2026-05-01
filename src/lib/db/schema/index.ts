@@ -702,6 +702,76 @@ export const userProfiles = pgTable("user_profile", {
     .notNull(),
 });
 
+export const experiencePostStatusEnum = pgEnum("experience_post_status", [
+  "draft",
+  "pending_review",
+  "published",
+  "offline",
+]);
+
+export const experiencePosts = pgTable(
+  "experience_post",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    competitionId: varchar("competition_id", { length: 64 }),
+    competitionTitle: varchar("competition_title", { length: 300 }),
+    title: varchar("title", { length: 300 }).notNull(),
+    content: text("content").notNull().default(""),
+    awardLevel: varchar("award_level", { length: 120 }),
+    coverImage: text("cover_image"),
+    status: experiencePostStatusEnum("status").notNull().default("draft"),
+    reviewerId: uuid("reviewer_id"),
+    reviewComment: text("review_comment"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    userIdx: index("experience_post_user_idx").on(table.userId),
+    statusIdx: index("experience_post_status_idx").on(table.status),
+  }),
+);
+
+export const hallOfFameStatusEnum = pgEnum("hall_of_fame_status", [
+  "candidate",
+  "active",
+  "hidden",
+]);
+
+export const hallOfFameEntries = pgTable(
+  "hall_of_fame_entry",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tag: varchar("tag", { length: 120 }).notNull(),
+    bio: text("bio").notNull().default(""),
+    adminBio: text("admin_bio"),
+    status: hallOfFameStatusEnum("status").notNull().default("candidate"),
+    displayOrder: integer("display_order").default(0).notNull(),
+    createdBy: uuid("created_by"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    userIdx: index("hall_of_fame_entry_user_idx").on(table.userId),
+    statusIdx: index("hall_of_fame_entry_status_idx").on(table.status),
+  }),
+);
+
 export const authAccounts = pgTable(
   "auth_account",
   {

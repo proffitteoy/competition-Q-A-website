@@ -1,7 +1,24 @@
+import { getSessionUser } from "@/lib/auth/session";
+import { hallOfFameEntries } from "@/lib/mock-data";
+import { getMeProfile } from "@/server/repositories/me-profile-repository";
 import { PageHeader } from "@/components/shared/page-header";
-import { EmptyState } from "@/components/shared/empty-state";
+import { HallOfFameStatusCard } from "@/components/profile/hall-of-fame-status-card";
 
-export default function MyHallOfFamePage() {
+export default async function MyHallOfFamePage() {
+  const sessionUser = await getSessionUser();
+  const userId = sessionUser.id!;
+
+  const [profile, entry] = await Promise.all([
+    getMeProfile(userId),
+    Promise.resolve(hallOfFameEntries.find((e) => e.userId === userId) ?? null),
+  ]);
+
+  const displaySettings = {
+    publicShowAvatar: profile?.profile?.publicShowAvatar ?? true,
+    publicShowCollegeMajor: profile?.profile?.publicShowCollegeMajor ?? true,
+    publicShowTitles: profile?.profile?.publicShowTitles ?? true,
+  };
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -9,9 +26,11 @@ export default function MyHallOfFamePage() {
         title="名人堂展示"
         description="查看入选状态、公开页预览与展示设置"
       />
-      <EmptyState
-        title="名人堂展示功能即将上线"
-        description="后续版本将支持查看名人堂入选状态和管理公开展示信息，敬请期待。"
+      <HallOfFameStatusCard
+        entry={entry}
+        userId={userId}
+        userName={sessionUser.name}
+        displaySettings={displaySettings}
       />
     </div>
   );

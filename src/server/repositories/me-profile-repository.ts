@@ -2,6 +2,10 @@ import { eq } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
 import { isDatabaseConfigured } from "@/lib/db/config";
+import {
+  getMissingRelationSetupMessage,
+  isMissingRelationError,
+} from "@/lib/db/errors";
 import { users, userProfiles } from "@/lib/db/schema";
 
 export interface MeProfileData {
@@ -50,22 +54,36 @@ export async function getMeProfile(
     return null;
   }
 
-  const profileRow = await db.query.userProfiles.findFirst({
-    where: eq(userProfiles.userId, userId),
-  });
+  const userData: MeProfileData["user"] = {
+    id: userRow.id,
+    name: userRow.name,
+    email: userRow.email,
+    image: userRow.image,
+    studentNo: userRow.studentNo,
+    college: userRow.college,
+    major: userRow.major,
+    grade: userRow.grade,
+    phone: userRow.phone,
+  };
+
+  let profileRow: Awaited<ReturnType<typeof db.query.userProfiles.findFirst>> | null =
+    null;
+  try {
+    profileRow = await db.query.userProfiles.findFirst({
+      where: eq(userProfiles.userId, userId),
+    });
+  } catch (error) {
+    if (isMissingRelationError(error, "user_profile")) {
+      return {
+        user: userData,
+        profile: null,
+      };
+    }
+    throw error;
+  }
 
   return {
-    user: {
-      id: userRow.id,
-      name: userRow.name,
-      email: userRow.email,
-      image: userRow.image,
-      studentNo: userRow.studentNo,
-      college: userRow.college,
-      major: userRow.major,
-      grade: userRow.grade,
-      phone: userRow.phone,
-    },
+    user: userData,
     profile: profileRow
       ? {
           nickname: profileRow.nickname,
@@ -121,43 +139,55 @@ export async function updateMeProfile(
   const db = getDb();
   const now = new Date();
 
-  await db.transaction(async (tx) => {
-    const userUpdates: Record<string, unknown> = { updatedAt: now };
-    if (input.name !== undefined) userUpdates.name = input.name;
-    if (input.studentNo !== undefined) userUpdates.studentNo = input.studentNo;
-    if (input.college !== undefined) userUpdates.college = input.college;
-    if (input.major !== undefined) userUpdates.major = input.major;
-    if (input.grade !== undefined) userUpdates.grade = input.grade;
-    if (input.phone !== undefined) userUpdates.phone = input.phone;
+  try {
+    await db.transaction(async (tx) => {
+      const userUpdates: Record<string, unknown> = { updatedAt: now };
+      if (input.name !== undefined) userUpdates.name = input.name;
+      if (input.studentNo !== undefined) userUpdates.studentNo = input.studentNo;
+      if (input.college !== undefined) userUpdates.college = input.college;
+      if (input.major !== undefined) userUpdates.major = input.major;
+      if (input.grade !== undefined) userUpdates.grade = input.grade;
+      if (input.phone !== undefined) userUpdates.phone = input.phone;
 
-    if (Object.keys(userUpdates).length > 1) {
-      await tx.update(users).set(userUpdates).where(eq(users.id, userId));
+      if (Object.keys(userUpdates).length > 1) {
+        await tx.update(users).set(userUpdates).where(eq(users.id, userId));
+      }
+
+      const profileValues = {
+        userId,
+        nickname: input.nickname ?? null,
+        gender: input.gender ?? null,
+        birthday: input.birthday ? new Date(input.birthday) : null,
+        schoolName: input.schoolName ?? null,
+        department: input.department ?? null,
+        enrollmentYear: input.enrollmentYear ?? null,
+        educationLevel: input.educationLevel ?? null,
+        inSchoolStatus: input.inSchoolStatus ?? null,
+        publicBio: input.publicBio ?? null,
+        skillTags: input.skillTags ?? [],
+        publicShowAvatar: input.publicShowAvatar ?? true,
+        publicShowCollegeMajor: input.publicShowCollegeMajor ?? true,
+        publicShowTitles: input.publicShowTitles ?? true,
+        updatedAt: now,
+      };
+
+      await tx
+        .insert(userProfiles)
+        .values({ ...profileValues, createdAt: now })
+        .onConflictDoUpdate({
+          target: userProfiles.userId,
+          set: profileValues,
+        });
+    });
+  } catch (error) {
+    const message = getMissingRelationSetupMessage(
+      error,
+      "user_profile",
+      "个人资料",
+    );
+    if (message) {
+      throw new Error(message);
     }
-
-    const profileValues = {
-      userId,
-      nickname: input.nickname ?? null,
-      gender: input.gender ?? null,
-      birthday: input.birthday ? new Date(input.birthday) : null,
-      schoolName: input.schoolName ?? null,
-      department: input.department ?? null,
-      enrollmentYear: input.enrollmentYear ?? null,
-      educationLevel: input.educationLevel ?? null,
-      inSchoolStatus: input.inSchoolStatus ?? null,
-      publicBio: input.publicBio ?? null,
-      skillTags: input.skillTags ?? [],
-      publicShowAvatar: input.publicShowAvatar ?? true,
-      publicShowCollegeMajor: input.publicShowCollegeMajor ?? true,
-      publicShowTitles: input.publicShowTitles ?? true,
-      updatedAt: now,
-    };
-
-    await tx
-      .insert(userProfiles)
-      .values({ ...profileValues, createdAt: now })
-      .onConflictDoUpdate({
-        target: userProfiles.userId,
-        set: profileValues,
-      });
-  });
+    throw error;
+  }
 }

@@ -8,7 +8,7 @@ import { readUploadedFile } from "@/lib/storage/storage-driver";
 import { assertCanEditCompetitionContent } from "@/server/permissions/competition-permissions";
 import { uploadFilesService } from "@/server/services/upload-service";
 
-const scopeSchema = z.enum(["registration", "notice", "competition"]);
+const scopeSchema = z.enum(["registration", "notice", "competition", "avatar", "experience_cover"]);
 const storageKeySchema = z.string().min(1);
 
 function resolveMimeType(storageKey: string) {
@@ -80,14 +80,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
     }
 
-    if (!competitionId) {
+    const userScopedUploads = scope === "registration" || scope === "avatar" || scope === "experience_cover";
+
+    if (!userScopedUploads && !competitionId) {
       return NextResponse.json(
         { message: "competitionId is required for uploads." },
         { status: 400 },
       );
     }
 
-    if (scope !== "registration") {
+    if (!userScopedUploads) {
       if (!isContentManagerRole(sessionUser.role)) {
         return NextResponse.json({ message: "Forbidden." }, { status: 403 });
       }
@@ -97,7 +99,7 @@ export async function POST(request: Request) {
           role: sessionUser.role,
           scopedCompetitionIds: sessionUser.scopedCompetitionIds,
         },
-        competitionId,
+        competitionId!,
       );
     }
 

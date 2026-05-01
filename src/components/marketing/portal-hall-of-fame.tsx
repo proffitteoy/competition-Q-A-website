@@ -51,7 +51,7 @@ function PersonCard({ entry }: { entry: HallOfFameEntry }) {
 export function PortalHallOfFame({ entries }: PortalHallOfFameProps) {
   return (
     <Section id="hall-of-fame" className="pt-0">
-      <div className="mx-auto grid max-w-7xl gap-6 xl:grid-cols-[0.72fr_1.28fr]">
+      <div className="mx-auto grid max-w-7xl gap-6 xl:grid-cols-2">
         <FadeInOnScroll direction="left">
           <Card className="overflow-hidden border-slate-200/70 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(30,41,59,0.96))] text-white shadow-[0_20px_60px_-30px_rgba(15,23,42,0.7)]">
             <CardHeader className="space-y-4">

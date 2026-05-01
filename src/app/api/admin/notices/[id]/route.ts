@@ -4,6 +4,10 @@ import { z } from "zod";
 import { isContentManagerRole } from "@/lib/auth/authorization";
 import { getSessionUser } from "@/lib/auth/session";
 import {
+  getMissingRelationSetupMessage,
+  isDrizzleQueryError,
+} from "@/lib/db/errors";
+import {
   extractPlainTextFromHtml,
   sanitizeRichTextHtml,
 } from "@/lib/security/html-sanitize";
@@ -65,7 +69,20 @@ export async function PATCH(
 
     return NextResponse.json({ notice });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to update notice.";
+    console.error("[admin/notices/:id] update failed:", error);
+    const setupMessage = getMissingRelationSetupMessage(
+      error,
+      "competition_notice",
+      "通知",
+    );
+    if (setupMessage) {
+      return NextResponse.json({ message: setupMessage }, { status: 503 });
+    }
+
+    const message =
+      error instanceof Error && !isDrizzleQueryError(error)
+        ? error.message
+        : "更新通知失败，请稍后重试。";
     return NextResponse.json({ message }, { status: 400 });
   }
 }
@@ -101,7 +118,20 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to delete notice.";
+    console.error("[admin/notices/:id] delete failed:", error);
+    const setupMessage = getMissingRelationSetupMessage(
+      error,
+      "competition_notice",
+      "通知",
+    );
+    if (setupMessage) {
+      return NextResponse.json({ message: setupMessage }, { status: 503 });
+    }
+
+    const message =
+      error instanceof Error && !isDrizzleQueryError(error)
+        ? error.message
+        : "删除通知失败，请稍后重试。";
     return NextResponse.json({ message }, { status: 400 });
   }
 }

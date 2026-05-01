@@ -66,7 +66,7 @@ export function PortalNoticeBoard({ notices }: PortalNoticeBoardProps) {
         </FadeInOnScroll>
 
         {featuredNotice ? (
-          <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="grid gap-5 lg:grid-cols-2">
             <FadeInOnScroll direction="left" delay={0.1}>
               <Card className="overflow-hidden border-slate-200/70 bg-[linear-gradient(160deg,rgba(255,252,245,0.96),rgba(255,255,255,0.96))] shadow-[0_18px_50px_-30px_rgba(15,23,42,0.38)]">
                 <CardHeader className="space-y-5">
