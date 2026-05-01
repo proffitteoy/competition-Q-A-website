@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { FileText, HelpCircle, MessageSquare } from "lucide-react";
+import { FileText, HelpCircle } from "lucide-react";
 
 import { CompetitionDetailHeader } from "@/components/competitions/competition-detail-header";
 import { PortalFooter } from "@/components/marketing/portal-footer";
@@ -12,6 +12,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { QuestionSummaryCard } from "@/components/questions/question-summary-card";
 import { getCompetitionById } from "@/server/repositories/competition-repository";
 
 export default async function CompetitionDetailPage({
@@ -92,24 +93,7 @@ export default async function CompetitionDetailPage({
                   ))}
                 </CardContent>
               </Card>
-              <Card className="border-border/70">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="size-5 text-primary" />
-                    相关问答占位
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm leading-7 text-muted-foreground">
-                  {competition.relatedQuestions.map((question) => (
-                    <div
-                      key={question}
-                      className="rounded-2xl border border-dashed border-border/70 px-4 py-3"
-                    >
-                      {question}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+              <QuestionSummaryCard competitionId={id} />
             </div>
           </div>
         </div>

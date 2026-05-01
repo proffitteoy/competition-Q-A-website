@@ -7,6 +7,13 @@ import { PageHeader } from "@/components/shared/page-header";
 import { getSessionUser } from "@/lib/auth/session";
 import { listApplicationsByApplicantUserId } from "@/server/repositories/application-repository";
 
+const roleLabelMap = {
+  super_admin: "超级管理员",
+  competition_admin: "比赛管理员",
+  content_editor: "内容编辑",
+  student_user: "学生用户",
+} as const;
+
 export default async function MyApplicationsPage() {
   const sessionUser = await getSessionUser();
   const applications = sessionUser.id
@@ -19,9 +26,9 @@ export default async function MyApplicationsPage() {
       <Section>
         <div className="mx-auto max-w-7xl space-y-8">
           <PageHeader
-            eyebrow="My Applications"
+            eyebrow="我的报名"
             title="我的报名"
-            description={`当前查看用户：${sessionUser.name}（${sessionUser.role}）`}
+            description={`当前查看用户：${sessionUser.name}（${roleLabelMap[sessionUser.role]}）`}
           />
           {applications.length ? (
             <div className="space-y-4">

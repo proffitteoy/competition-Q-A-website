@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
@@ -61,28 +61,42 @@ function buildDatabaseUrl() {
 }
 
 async function main() {
-  const migrationPath = path.join(
+  const migrationsDir = path.join(
     process.cwd(),
     "src",
     "lib",
     "db",
     "migrations",
-    "0000_init.sql",
   );
-  const sql = await readFile(migrationPath, "utf8");
+  const files = await readdir(migrationsDir);
+  const sqlFiles = files
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
+
+  if (sqlFiles.length === 0) {
+    console.log("[migration] No SQL files found.");
+    return;
+  }
+
   const client = new Client({
     connectionString: buildDatabaseUrl(),
   });
 
   await client.connect();
   try {
-    await client.query("BEGIN");
-    await client.query(sql);
-    await client.query("COMMIT");
-    console.log("[migration] 0000_init.sql applied.");
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
+    for (const file of sqlFiles) {
+      const filePath = path.join(migrationsDir, file);
+      const sqlContent = await readFile(filePath, "utf8");
+      await client.query("BEGIN");
+      try {
+        await client.query(sqlContent);
+        await client.query("COMMIT");
+        console.log(`[migration] ${file} applied.`);
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw new Error(`Migration ${file} failed: ${error.message}`);
+      }
+    }
   } finally {
     await client.end();
   }

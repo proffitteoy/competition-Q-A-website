@@ -578,6 +578,189 @@ export const experiencePosts: ExperiencePost[] = [
   },
 ];
 
+export type QuestionStatus = "open" | "closed" | "hidden";
+
+export interface QuestionRecord {
+  id: string;
+  competitionId: string;
+  authorId: string;
+  authorName: string;
+  title: string;
+  body: string;
+  status: QuestionStatus;
+  isPinned: boolean;
+  answerCount: number;
+  createdAt: string;
+}
+
+export interface AnswerRecord {
+  id: string;
+  questionId: string;
+  authorId: string;
+  authorName: string;
+  body: string;
+  isAccepted: boolean;
+  createdAt: string;
+}
+
+export interface QuestionCommentRecord {
+  id: string;
+  questionId: string;
+  answerId: string | null;
+  parentId: string | null;
+  depth: number;
+  authorId: string;
+  authorName: string;
+  body: string;
+  createdAt: string;
+}
+
+export const mockQuestions: QuestionRecord[] = [
+  {
+    id: "Q-001",
+    competitionId: "math-modeling-2026",
+    authorId: "USR-003",
+    authorName: "张雨桐",
+    title: "如何准备建模选题方向？",
+    body: "第一次参加建模竞赛，想了解选题时应该优先考虑哪些因素？\n\n比如 A 题和 B 题的难度差异大吗？有没有推荐的准备策略？",
+    status: "open",
+    isPinned: true,
+    answerCount: 2,
+    createdAt: "2026-05-05 10:30",
+  },
+  {
+    id: "Q-002",
+    competitionId: "math-modeling-2026",
+    authorId: "USR-006",
+    authorName: "李卓航",
+    title: "跨专业组队是否允许？",
+    body: "我是智能制造学院的，想和数学学院的同学一起组队参加建模选拔。请问跨学院组队有什么限制吗？",
+    status: "open",
+    isPinned: false,
+    answerCount: 1,
+    createdAt: "2026-05-06 14:20",
+  },
+  {
+    id: "Q-003",
+    competitionId: "robot-innovation-2026",
+    authorId: "USR-007",
+    authorName: "周若宁",
+    title: "项目摘要写到什么深度？",
+    body: "赛事要求提交项目摘要，但没有明确字数和格式要求。请问一般写到什么程度比较合适？需要包含技术方案细节吗？",
+    status: "open",
+    isPinned: false,
+    answerCount: 1,
+    createdAt: "2026-05-22 09:15",
+  },
+  {
+    id: "Q-004",
+    competitionId: "programming-contest-2026",
+    authorId: "USR-009",
+    authorName: "吴泽宇",
+    title: "比赛时使用什么语言环境？",
+    body: "校赛的评测环境支持哪些编程语言？`C++17` 和 `Python 3.11` 都可以吗？有没有内存和时间限制的说明？",
+    status: "closed",
+    isPinned: false,
+    answerCount: 1,
+    createdAt: "2026-03-25 16:40",
+  },
+];
+
+export const mockAnswers: AnswerRecord[] = [
+  {
+    id: "A-001",
+    questionId: "Q-001",
+    authorId: "USR-005",
+    authorName: "陈思远",
+    body: "建议先看往届题目分类，大致分为**优化类**、**统计类**和**评价类**三大方向。\n\n选题时优先考虑团队的技术栈匹配度，比如你们擅长编程就选数据量大的题，擅长建模理论就选优化题。\n\nA 题通常偏连续优化，B 题偏离散或统计，C 题偏开放性评价。新手建议从 B 题入手。",
+    isAccepted: true,
+    createdAt: "2026-05-05 15:20",
+  },
+  {
+    id: "A-002",
+    questionId: "Q-001",
+    authorId: "USR-001",
+    authorName: "王老师",
+    body: "补充一下：训练营第一周会专门讲选题策略，届时会结合往届真题做分析。建议先下载附件区的往届题库预习。",
+    isAccepted: false,
+    createdAt: "2026-05-06 09:00",
+  },
+  {
+    id: "A-003",
+    questionId: "Q-002",
+    authorId: "USR-001",
+    authorName: "王老师",
+    body: "允许跨学院组队，但队长必须是数学学院的学生。报名时在团队信息中填写完整的跨学院成员信息即可。",
+    isAccepted: true,
+    createdAt: "2026-05-06 16:30",
+  },
+  {
+    id: "A-004",
+    questionId: "Q-003",
+    authorId: "USR-002",
+    authorName: "赵老师",
+    body: "项目摘要建议控制在 **500-800 字**，需要包含：\n\n1. 项目背景与目标\n2. 核心技术方案（不需要太细，点到关键技术即可）\n3. 预期成果\n4. 团队分工\n\n不需要写成完整的技术文档，重点是让评审了解你们要做什么、怎么做。",
+    isAccepted: false,
+    createdAt: "2026-05-22 14:00",
+  },
+  {
+    id: "A-005",
+    questionId: "Q-004",
+    authorId: "USR-001",
+    authorName: "王老师",
+    body: "校赛评测环境支持 `C++17`、`Java 17` 和 `Python 3.11`。\n\n- 时间限制：C++ 1s，Java 2s，Python 3s\n- 内存限制：统一 256MB\n\n详细说明见附件区的《校赛题单.pdf》第一页。",
+    isAccepted: true,
+    createdAt: "2026-03-26 10:00",
+  },
+];
+
+export const mockComments: QuestionCommentRecord[] = [
+  {
+    id: "C-001",
+    questionId: "Q-001",
+    answerId: "A-001",
+    parentId: null,
+    depth: 0,
+    authorId: "USR-003",
+    authorName: "张雨桐",
+    body: "谢谢！请问往届题库在哪里下载？",
+    createdAt: "2026-05-05 16:00",
+  },
+  {
+    id: "C-002",
+    questionId: "Q-001",
+    answerId: "A-001",
+    parentId: "C-001",
+    depth: 1,
+    authorId: "USR-005",
+    authorName: "陈思远",
+    body: "比赛详情页的附件区有，文件名是「往届题库.zip」。",
+    createdAt: "2026-05-05 16:15",
+  },
+  {
+    id: "C-003",
+    questionId: "Q-002",
+    answerId: null,
+    parentId: null,
+    depth: 0,
+    authorId: "USR-006",
+    authorName: "李卓航",
+    body: "明白了，那我找数学学院的同学当队长就行。",
+    createdAt: "2026-05-06 17:00",
+  },
+  {
+    id: "C-004",
+    questionId: "Q-001",
+    answerId: "A-001",
+    parentId: "C-002",
+    depth: 2,
+    authorId: "USR-003",
+    authorName: "张雨桐",
+    body: "找到了，感谢！",
+    createdAt: "2026-05-05 16:30",
+  },
+];
+
 export function getCompetitionById(id: string) {
   return competitions.find((competition) => competition.id === id);
 }

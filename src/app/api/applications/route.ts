@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ application }, { status: 201 });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Application submission failed.";
+      error instanceof Error ? error.message : "报名提交失败。";
     return NextResponse.json({ message }, { status: 400 });
   }
 }

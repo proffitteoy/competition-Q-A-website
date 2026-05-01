@@ -43,10 +43,10 @@ const ACTIVE_REGISTRATION_STATUSES: RegistrationStatus[] = [
 ];
 
 const MOCK_WRITE_DISABLED_MESSAGE =
-  "Database is not configured. Write operations are disabled.";
+  "数据库未配置，写操作已禁用。";
 
 function formatDateTime(value: Date | null | undefined) {
-  if (!value) return "Not submitted";
+  if (!value) return "未提交";
   const year = value.getFullYear();
   const month = String(value.getMonth() + 1).padStart(2, "0");
   const day = String(value.getDate()).padStart(2, "0");
@@ -56,12 +56,12 @@ function formatDateTime(value: Date | null | undefined) {
 }
 
 function defaultNoteByStatus(status: RegistrationStatus) {
-  if (status === "draft") return "Draft is not submitted.";
-  if (status === "submitted") return "Submitted and waiting for review.";
-  if (status === "approved") return "Approved.";
-  if (status === "rejected") return "Rejected. Please update and resubmit.";
-  if (status === "withdrawn") return "Withdrawn by applicant.";
-  return "Cancelled.";
+  if (status === "draft") return "草稿未提交。";
+  if (status === "submitted") return "已提交，待审核。";
+  if (status === "approved") return "审核已通过。";
+  if (status === "rejected") return "审核未通过，请补充后重新提交。";
+  if (status === "withdrawn") return "已由申请人撤回。";
+  return "已取消。";
 }
 
 function buildApplicationId(sequence: number) {
@@ -191,7 +191,7 @@ async function ensureApplicantUser(tx: DbTx, input: SubmitApplicationInput) {
 
   const applicant = created[0];
   if (!applicant) {
-    throw new Error("Failed to create applicant user.");
+    throw new Error("创建报名用户失败。");
   }
 
   await tx
@@ -231,7 +231,7 @@ async function ensureCompetitionFormVersion(
   }
 
   if (!form) {
-    throw new Error("Failed to initialize registration form.");
+    throw new Error("初始化报名表失败。");
   }
 
   if (form.currentVersionId) {
@@ -274,7 +274,7 @@ async function ensureCompetitionFormVersion(
 
   const version = createdVersion[0];
   if (!version) {
-    throw new Error("Failed to initialize registration form version.");
+    throw new Error("初始化报名表版本失败。");
   }
 
   await tx
@@ -472,7 +472,7 @@ async function queryApplications(filters: QueryFilters = {}) {
     submittedAt: formatDateTime(row.submittedAt),
     mode: row.applyMode,
     status: row.status,
-    reviewer: row.reviewerName ?? "Pending",
+    reviewer: row.reviewerName ?? "待分配",
     note: row.latestReviewComment ?? defaultNoteByStatus(row.status),
   }));
 }
@@ -509,7 +509,7 @@ export async function submitApplication(input: SubmitApplicationInput) {
       where: eq(competitions.id, input.competitionId),
     });
     if (!competition) {
-      throw new Error("Competition does not exist.");
+      throw new Error("比赛不存在。");
     }
 
     const applicant = await ensureApplicantUser(tx, input);
@@ -522,7 +522,7 @@ export async function submitApplication(input: SubmitApplicationInput) {
       ),
     });
     if (duplicated && isActiveRegistration(duplicated.status)) {
-      throw new Error("An active application already exists for this competition.");
+      throw new Error("该比赛已存在一条活跃报名记录。");
     }
 
     const formVersionId = await ensureCompetitionFormVersion(
@@ -583,13 +583,13 @@ export async function submitApplication(input: SubmitApplicationInput) {
         payloadJson: payload,
         applicantSnapshotJson: applicantSnapshot,
         submittedAt: now,
-        latestReviewComment: "Submitted and waiting for review.",
+        latestReviewComment: "已提交，待审核。",
       })
       .returning();
 
     const registration = created[0];
     if (!registration) {
-      throw new Error("Failed to create registration.");
+      throw new Error("创建报名记录失败。");
     }
 
     await tx.insert(registrationRevisions).values({
@@ -610,7 +610,7 @@ export async function submitApplication(input: SubmitApplicationInput) {
       action: "submit",
       operatorUserId: applicant.id,
       operatorRole: "student_user",
-      comment: "Application submitted by student.",
+      comment: "学生提交报名。",
     });
 
     return registrationNo;
@@ -618,7 +618,7 @@ export async function submitApplication(input: SubmitApplicationInput) {
 
   const latest = await getApplicationById(insertedNo);
   if (!latest) {
-    throw new Error("Application submitted, but failed to fetch latest record.");
+    throw new Error("报名已提交，但读取最新记录失败。");
   }
   return latest;
 }
@@ -639,7 +639,7 @@ export async function reviewApplication(
       where: eq(registrations.registrationNo, id),
     });
     if (!current) {
-      throw new Error("Application does not exist.");
+      throw new Error("报名记录不存在。");
     }
 
     const now = new Date();
@@ -668,7 +668,7 @@ export async function reviewApplication(
 
   const refreshed = await getApplicationById(id);
   if (!refreshed) {
-    throw new Error("Review completed, but failed to fetch updated record.");
+    throw new Error("审核已完成，但读取更新后的记录失败。");
   }
   return refreshed;
 }
@@ -754,6 +754,6 @@ export async function listRegistrationAuditLogsByApplicationIds(
     action: item.action,
     comment: item.comment,
     createdAt: formatDateTime(item.createdAt),
-    operatorName: item.operatorName ?? "System",
+    operatorName: item.operatorName ?? "系统",
   }));
 }
