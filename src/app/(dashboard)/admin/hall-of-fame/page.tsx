@@ -17,6 +17,7 @@ interface HallOfFameEntry {
   id: string;
   userId: string;
   userName: string;
+  userEmail: string;
   college: string | null;
   tag: string;
   bio: string;
@@ -176,7 +177,7 @@ export default function AdminHallOfFamePage() {
         defaultValues={
           editing
             ? {
-                userId: editing.userId,
+                email: editing.userEmail,
                 tag: editing.tag,
                 bio: editing.bio,
                 adminBio: editing.adminBio ?? "",

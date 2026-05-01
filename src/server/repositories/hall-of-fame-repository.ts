@@ -10,6 +10,7 @@ export interface HallOfFameRow {
   id: string;
   userId: string;
   userName: string;
+  userEmail: string;
   userImage: string | null;
   college: string | null;
   tag: string;
@@ -56,6 +57,7 @@ async function enrichRow(
     id: r.id,
     userId: r.userId,
     userName: userRow?.name ?? "",
+    userEmail: userRow?.email ?? "",
     userImage: userRow?.image ?? null,
     college: userRow?.college ?? null,
     tag: r.tag,

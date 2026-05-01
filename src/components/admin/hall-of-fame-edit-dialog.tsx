@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 
 export interface HallOfFameFormData {
-  userId: string;
+  email: string;
   tag: string;
   bio: string;
   adminBio?: string | null;
@@ -45,7 +45,7 @@ export function HallOfFameEditDialog({
   onSave,
   isEdit,
 }: HallOfFameEditDialogProps) {
-  const [userId, setUserId] = useState(defaultValues?.userId ?? "");
+  const [email, setEmail] = useState(defaultValues?.email ?? "");
   const [tag, setTag] = useState(defaultValues?.tag ?? "");
   const [bio, setBio] = useState(defaultValues?.bio ?? "");
   const [adminBio, setAdminBio] = useState(defaultValues?.adminBio ?? "");
@@ -59,7 +59,7 @@ export function HallOfFameEditDialog({
 
   useEffect(() => {
     if (open) {
-      setUserId(defaultValues?.userId ?? "");
+      setEmail(defaultValues?.email ?? "");
       setTag(defaultValues?.tag ?? "");
       setBio(defaultValues?.bio ?? "");
       setAdminBio(defaultValues?.adminBio ?? "");
@@ -72,7 +72,7 @@ export function HallOfFameEditDialog({
     setSubmitting(true);
     try {
       await onSave({
-        userId,
+        email,
         tag,
         bio,
         adminBio: adminBio || null,
@@ -93,12 +93,13 @@ export function HallOfFameEditDialog({
         <div className="grid gap-4 py-4">
           {!isEdit && (
             <div className="grid gap-2">
-              <Label htmlFor="userId">用户 ID</Label>
+              <Label htmlFor="email">用户邮箱</Label>
               <Input
-                id="userId"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                placeholder="UUID 格式"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="user@example.com"
               />
             </div>
           )}

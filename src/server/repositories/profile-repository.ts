@@ -21,6 +21,8 @@ import {
   type ExperiencePost,
 } from "@/lib/mock-data";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export interface PublicExperiencePost {
   id: string;
   userId: string;
@@ -131,9 +133,10 @@ export async function getHallOfFameEntries(): Promise<PublicHallOfFameEntry[]> {
 export async function getPublicProfile(
   userId: string,
 ): Promise<PublicProfile | null> {
+  const isUuid = UUID_RE.test(userId);
   let hofEntry: PublicHallOfFameEntry | null = null;
 
-  if (isDatabaseConfigured()) {
+  if (isUuid && isDatabaseConfigured()) {
     try {
       const dbEntry = await getForUser(userId);
       if (dbEntry && dbEntry.status === "active") {
@@ -150,7 +153,7 @@ export async function getPublicProfile(
     hofEntry = mockHofToPublic(mockEntry);
   }
 
-  if (isDatabaseConfigured()) {
+  if (isUuid && isDatabaseConfigured()) {
     const db = getDb();
     const userRow = await db.query.users.findFirst({
       where: eq(users.id, userId),
@@ -206,7 +209,8 @@ export async function getPublishedExperiencePost(
   userId: string,
   postId: string,
 ): Promise<PublicExperiencePost | null> {
-  if (isDatabaseConfigured()) {
+  const isUuid = UUID_RE.test(userId) && UUID_RE.test(postId);
+  if (isUuid && isDatabaseConfigured()) {
     try {
       const dbPost = await getPublishedPostById(postId);
       if (dbPost && dbPost.userId === userId) {

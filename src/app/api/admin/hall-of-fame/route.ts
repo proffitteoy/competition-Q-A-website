@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { isAdminRole } from "@/lib/auth/authorization";
 import { isMissingRelationError } from "@/lib/db/errors";
+import { getDb } from "@/lib/db/client";
+import { users } from "@/lib/db/schema";
 import {
   listAllAdmin,
   createHallOfFameEntry,
 } from "@/server/repositories/hall-of-fame-repository";
 
 const createSchema = z.object({
-  userId: z.string().uuid(),
+  email: z.string().email("请输入有效的邮箱地址"),
   tag: z.string().min(1).max(120),
   bio: z.string().max(2000).optional(),
   adminBio: z.string().max(2000).nullable().optional(),
@@ -42,7 +45,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "无权限。" }, { status: 403 });
     }
     const body = createSchema.parse(await request.json());
-    const entry = await createHallOfFameEntry(body, sessionUser.id);
+
+    const db = getDb();
+    const userRow = await db.query.users.findFirst({
+      where: eq(users.email, body.email),
+    });
+    if (!userRow) {
+      return NextResponse.json(
+        { message: `未找到邮箱为 ${body.email} 的用户。` },
+        { status: 404 },
+      );
+    }
+
+    const { email: _, ...rest } = body;
+    const entry = await createHallOfFameEntry(
+      { ...rest, userId: userRow.id },
+      sessionUser.id,
+    );
     return NextResponse.json({ data: entry }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
