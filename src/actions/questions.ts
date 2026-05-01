@@ -183,4 +183,5 @@ export async function deleteCommentAction(input: unknown) {
     commentAuthorId: payload.commentAuthorId,
     actor,
   });
+  revalidatePath(`/competitions/${payload.competitionId}/questions`);
 }

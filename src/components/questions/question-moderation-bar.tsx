@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { Pin, PinOff, Lock, Unlock, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { moderateQuestionAction } from "@/actions/questions";
@@ -23,11 +24,16 @@ export function QuestionModerationBar({
 
   function handleAction(action: string) {
     startTransition(async () => {
-      await moderateQuestionAction({
-        questionId,
-        competitionId,
-        action,
-      });
+      try {
+        await moderateQuestionAction({
+          questionId,
+          competitionId,
+          action,
+        });
+        toast.success("操作成功");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "操作失败，请重试。");
+      }
     });
   }
 

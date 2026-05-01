@@ -2,7 +2,7 @@ import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
 import { isDatabaseConfigured } from "@/lib/db/config";
-import { mockAnswers, type AnswerRecord } from "@/lib/mock-data";
+import { mockAnswers, mockQuestions, type AnswerRecord } from "@/lib/mock-data";
 import { answers, questions, users } from "@/lib/db/schema";
 
 export interface AnswerWithAuthor {
@@ -63,6 +63,23 @@ export async function listAnswersByQuestion(
 }
 
 export async function createAnswer(input: CreateAnswerInput) {
+  if (!isDatabaseConfigured()) {
+    const now = new Date().toISOString();
+    const mock: AnswerWithAuthor = {
+      id: `A-${Date.now()}`,
+      questionId: input.questionId,
+      authorId: input.authorId,
+      authorName: "当前用户",
+      body: input.body,
+      isAccepted: false,
+      createdAt: now,
+    };
+    mockAnswers.push(mock as any);
+    const q = mockQuestions.find((q) => q.id === input.questionId);
+    if (q) q.answerCount++;
+    return mock;
+  }
+
   const db = getDb();
   return db.transaction(async (tx) => {
     const [row] = await tx
@@ -87,6 +104,15 @@ export async function createAnswer(input: CreateAnswerInput) {
 }
 
 export async function acceptAnswer(answerId: string, questionId: string) {
+  if (!isDatabaseConfigured()) {
+    for (const a of mockAnswers) {
+      if (a.questionId === questionId) a.isAccepted = false;
+    }
+    const target = mockAnswers.find((a) => a.id === answerId);
+    if (target) target.isAccepted = true;
+    return target;
+  }
+
   const db = getDb();
   return db.transaction(async (tx) => {
     await tx
@@ -107,6 +133,16 @@ export async function acceptAnswer(answerId: string, questionId: string) {
 }
 
 export async function deleteAnswer(answerId: string, questionId: string) {
+  if (!isDatabaseConfigured()) {
+    const idx = mockAnswers.findIndex((a) => a.id === answerId);
+    if (idx >= 0) {
+      mockAnswers.splice(idx, 1);
+      const q = mockQuestions.find((q) => q.id === questionId);
+      if (q && q.answerCount > 0) q.answerCount--;
+    }
+    return { id: answerId };
+  }
+
   const db = getDb();
   return db.transaction(async (tx) => {
     const [row] = await tx

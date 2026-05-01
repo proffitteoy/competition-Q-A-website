@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ export function AskQuestionForm({
         });
         setTitle("");
         setBody("");
+        toast.success("问题已发布");
         onSuccess?.();
       } catch (err) {
         setError(err instanceof Error ? err.message : "提交失败，请重试。");

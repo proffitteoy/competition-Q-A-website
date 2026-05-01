@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, LogIn } from "lucide-react";
 
 import { auth } from "@/lib/auth/auth";
 import { PortalNavbar } from "@/components/marketing/portal-navbar";
@@ -28,11 +28,14 @@ export default async function QuestionsPage({
   }
 
   const isLoggedIn = !!session?.user;
+  const currentUser = session?.user
+    ? { name: session.user.name ?? "未命名用户", role: (session.user as any).role ?? "student_user" }
+    : null;
   const questions = await listQuestionsByCompetition(id);
 
   return (
     <div className="min-h-screen bg-background">
-      <PortalNavbar />
+      <PortalNavbar currentUser={currentUser} />
       <Section className="pb-10">
         <div className="mx-auto max-w-3xl space-y-6">
           <nav className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -56,10 +59,20 @@ export default async function QuestionsPage({
 
           <QuestionList questions={questions} />
 
-          {isLoggedIn && (
+          {isLoggedIn ? (
             <div className="rounded-xl border border-border/70 p-5">
               <h2 className="mb-4 font-medium">我要提问</h2>
               <AskQuestionForm competitionId={id} />
+            </div>
+          ) : (
+            <div className="flex items-center justify-between rounded-xl border border-dashed border-border/70 px-5 py-4">
+              <p className="text-sm text-muted-foreground">登录后可参与讨论</p>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/sign-in">
+                  <LogIn className="mr-1.5 size-3.5" />
+                  登录
+                </Link>
+              </Button>
             </div>
           )}
         </div>

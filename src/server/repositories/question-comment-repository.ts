@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
 import { isDatabaseConfigured } from "@/lib/db/config";
@@ -60,7 +60,7 @@ export async function listCommentsByQuestion(
   const conditions = [eq(questionComments.questionId, questionId)];
   if (answerId !== undefined) {
     if (answerId === null) {
-      conditions.push(eq(questionComments.answerId, answerId as any));
+      conditions.push(isNull(questionComments.answerId));
     } else {
       conditions.push(eq(questionComments.answerId, answerId));
     }
@@ -80,6 +80,28 @@ export async function listCommentsByQuestion(
 }
 
 export async function createComment(input: CreateCommentInput) {
+  if (!isDatabaseConfigured()) {
+    let depth = 0;
+    if (input.parentId) {
+      const parent = mockComments.find((c) => c.id === input.parentId);
+      if (!parent) throw new Error("父评论不存在。");
+      depth = parent.depth + 1;
+    }
+    const mock: QuestionCommentRecord = {
+      id: `C-${Date.now()}`,
+      questionId: input.questionId,
+      answerId: input.answerId ?? null,
+      parentId: input.parentId ?? null,
+      depth,
+      authorId: input.authorId,
+      authorName: "当前用户",
+      body: input.body,
+      createdAt: new Date().toISOString(),
+    };
+    mockComments.push(mock);
+    return mock;
+  }
+
   const db = getDb();
 
   let depth = 0;
@@ -112,6 +134,12 @@ export async function createComment(input: CreateCommentInput) {
 }
 
 export async function deleteComment(id: string) {
+  if (!isDatabaseConfigured()) {
+    const idx = mockComments.findIndex((c) => c.id === id);
+    if (idx >= 0) mockComments.splice(idx, 1);
+    return { id };
+  }
+
   const db = getDb();
   const [row] = await db
     .delete(questionComments)

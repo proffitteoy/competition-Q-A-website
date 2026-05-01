@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,15 +30,19 @@ export function CommentForm({
   function handleSubmit() {
     if (!body.trim()) return;
     startTransition(async () => {
-      await addCommentAction({
-        questionId,
-        competitionId,
-        answerId: answerId ?? null,
-        parentId: parentId ?? null,
-        body: body.trim(),
-      });
-      setBody("");
-      onSuccess?.();
+      try {
+        await addCommentAction({
+          questionId,
+          competitionId,
+          answerId: answerId ?? null,
+          parentId: parentId ?? null,
+          body: body.trim(),
+        });
+        setBody("");
+        onSuccess?.();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "评论失败，请重试。");
+      }
     });
   }
 

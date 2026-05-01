@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { toast } from "sonner";
 
 import { AnswerCard } from "@/components/questions/answer-card";
 import { CommentTree } from "@/components/questions/comment-tree";
@@ -46,11 +47,16 @@ export function QuestionDetailAnswers({
 
   function handleAccept(answerId: string) {
     startTransition(async () => {
-      await acceptAnswerAction({
-        answerId,
-        questionId,
-        competitionId,
-      });
+      try {
+        await acceptAnswerAction({
+          answerId,
+          questionId,
+          competitionId,
+        });
+        toast.success("已采纳该回答");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "操作失败，请重试。");
+      }
     });
   }
 

@@ -74,10 +74,16 @@ export async function getSessionUser(): Promise<SessionUser> {
     };
   }
 
+  const fallbackId = process.env.MVP_SESSION_USER_ID?.trim() || "USR-003";
+  const fallbackScopes = process.env.MVP_SESSION_SCOPED_COMPETITIONS?.trim();
+
   return {
+    id: fallbackId,
     name: fallbackName || "平台访客",
     role: resolveFallbackRole(),
-    scopedCompetitionIds: [],
+    scopedCompetitionIds: fallbackScopes
+      ? fallbackScopes.split(",").map((s) => s.trim())
+      : [],
     source: "env_fallback",
   };
 }

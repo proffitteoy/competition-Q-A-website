@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,6 +33,7 @@ export function AnswerForm({
           body: body.trim(),
         });
         setBody("");
+        toast.success("回答已发布");
         onSuccess?.();
       } catch (err) {
         setError(err instanceof Error ? err.message : "提交失败，请重试。");

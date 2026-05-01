@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { FileText, HelpCircle } from "lucide-react";
 
+import { auth } from "@/lib/auth/auth";
 import { CompetitionDetailHeader } from "@/components/competitions/competition-detail-header";
 import { PortalFooter } from "@/components/marketing/portal-footer";
 import { PortalNavbar } from "@/components/marketing/portal-navbar";
@@ -21,15 +22,22 @@ export default async function CompetitionDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const competition = await getCompetitionById(id);
+  const [competition, session] = await Promise.all([
+    getCompetitionById(id),
+    auth(),
+  ]);
 
   if (!competition) {
     notFound();
   }
 
+  const currentUser = session?.user
+    ? { name: session.user.name ?? "未命名用户", role: (session.user as any).role ?? "student_user" }
+    : null;
+
   return (
     <div className="min-h-screen bg-background">
-      <PortalNavbar />
+      <PortalNavbar currentUser={currentUser} />
       <Section className="pb-10">
         <div className="mx-auto max-w-7xl space-y-8">
           <CompetitionDetailHeader competition={competition} />

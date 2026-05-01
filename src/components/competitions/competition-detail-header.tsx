@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarRange, MapPin, Users } from "lucide-react";
+import { CalendarRange, MapPin, MessageSquare, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +35,12 @@ export function CompetitionDetailHeader({
           <div className="flex flex-wrap gap-3">
             <Button asChild>
               <Link href={`/competitions/${competition.id}/apply`}>立即报名</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/competitions/${competition.id}/questions`}>
+                <MessageSquare className="mr-1.5 size-4" />
+                问答讨论
+              </Link>
             </Button>
             <Button variant="outline" asChild>
               <Link href="/competitions">返回比赛列表</Link>

@@ -174,6 +174,24 @@ export async function countQuestionsByCompetition(
 }
 
 export async function createQuestion(input: CreateQuestionInput) {
+  if (!isDatabaseConfigured()) {
+    const now = new Date().toISOString();
+    const mock: QuestionWithAuthor = {
+      id: `Q-${Date.now()}`,
+      competitionId: input.competitionId,
+      authorId: input.authorId,
+      authorName: "当前用户",
+      title: input.title,
+      body: input.body,
+      status: "open",
+      isPinned: false,
+      answerCount: 0,
+      createdAt: now,
+    };
+    mockQuestions.unshift(mock as any);
+    return mock;
+  }
+
   const db = getDb();
   const [row] = await db
     .insert(questions)
@@ -188,6 +206,12 @@ export async function createQuestion(input: CreateQuestionInput) {
 }
 
 export async function updateQuestion(id: string, input: UpdateQuestionInput) {
+  if (!isDatabaseConfigured()) {
+    const q = mockQuestions.find((q) => q.id === id);
+    if (q) Object.assign(q, input);
+    return q;
+  }
+
   const db = getDb();
   const [row] = await db
     .update(questions)
@@ -201,6 +225,12 @@ export async function updateQuestion(id: string, input: UpdateQuestionInput) {
 }
 
 export async function deleteQuestion(id: string) {
+  if (!isDatabaseConfigured()) {
+    const idx = mockQuestions.findIndex((q) => q.id === id);
+    if (idx >= 0) mockQuestions.splice(idx, 1);
+    return { id };
+  }
+
   const db = getDb();
   const [row] = await db
     .delete(questions)
