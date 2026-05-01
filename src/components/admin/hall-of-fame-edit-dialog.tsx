@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,21 +57,16 @@ export function HallOfFameEditDialog({
   );
   const [submitting, setSubmitting] = useState(false);
 
-  function resetForm() {
-    setUserId(defaultValues?.userId ?? "");
-    setTag(defaultValues?.tag ?? "");
-    setBio(defaultValues?.bio ?? "");
-    setAdminBio(defaultValues?.adminBio ?? "");
-    setStatus(defaultValues?.status ?? "candidate");
-    setDisplayOrder(defaultValues?.displayOrder ?? 0);
-  }
-
-  // Reset when dialog opens with new defaults
-  const prevOpen = useState(false);
-  if (open && !prevOpen[0]) {
-    resetForm();
-  }
-  prevOpen[0] = open;
+  useEffect(() => {
+    if (open) {
+      setUserId(defaultValues?.userId ?? "");
+      setTag(defaultValues?.tag ?? "");
+      setBio(defaultValues?.bio ?? "");
+      setAdminBio(defaultValues?.adminBio ?? "");
+      setStatus(defaultValues?.status ?? "candidate");
+      setDisplayOrder(defaultValues?.displayOrder ?? 0);
+    }
+  }, [open, defaultValues]);
 
   async function handleSubmit() {
     setSubmitting(true);
