@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { isAdminRole } from "@/lib/auth/authorization";
+import { isMissingRelationError } from "@/lib/db/errors";
 import { listForReview } from "@/server/repositories/experience-post-repository";
 import type { ExperiencePostStatus } from "@/server/repositories/experience-post-repository";
 
@@ -28,6 +29,9 @@ export async function GET(request: Request) {
     const posts = await listForReview(statusFilter);
     return NextResponse.json({ data: posts });
   } catch (error) {
+    if (isMissingRelationError(error)) {
+      return NextResponse.json({ data: [] });
+    }
     console.error("[admin/experience-posts:GET]", error);
     return NextResponse.json({ message: "获取文章列表失败。" }, { status: 500 });
   }

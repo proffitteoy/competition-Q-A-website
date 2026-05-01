@@ -4,6 +4,7 @@ import { ArrowLeft, Award, Calendar } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { getPublishedExperiencePost } from "@/server/repositories/profile-repository";
 
 interface ExperiencePostPageProps {
@@ -61,7 +62,7 @@ export default async function ExperiencePostPage({
         <CardContent className="p-6 sm:p-8">
           <div
             className="prose prose-slate max-w-none prose-headings:text-slate-900 prose-p:text-slate-700 prose-p:leading-7"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
           />
         </CardContent>
       </Card>

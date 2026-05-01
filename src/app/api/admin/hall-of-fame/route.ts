@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { isAdminRole } from "@/lib/auth/authorization";
+import { isMissingRelationError } from "@/lib/db/errors";
 import {
   listAllAdmin,
   createHallOfFameEntry,
@@ -26,6 +27,9 @@ export async function GET() {
     const entries = await listAllAdmin();
     return NextResponse.json({ data: entries });
   } catch (error) {
+    if (isMissingRelationError(error)) {
+      return NextResponse.json({ data: [] });
+    }
     console.error("[admin/hall-of-fame:GET]", error);
     return NextResponse.json({ message: "获取名人堂列表失败。" }, { status: 500 });
   }
