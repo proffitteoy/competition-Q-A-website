@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   getApplicationById,
-  listApplicationsByApplicant,
+  listApplicationsByApplicantUserId,
 } from "@/server/repositories/application-repository";
 import {
   bulkReviewApplicationsService,
@@ -54,7 +54,14 @@ const bulkReviewSchema = z.object({
 
 export async function submitApplicationAction(input: unknown) {
   const payload = submitSchema.parse(input);
-  const application = await submitApplicationService(payload);
+  const sessionUser = await getSessionUser();
+  if (!sessionUser.id) {
+    throw new Error("请先登录后再提交报名。");
+  }
+  const application = await submitApplicationService({
+    ...payload,
+    applicantUserId: sessionUser.id,
+  });
   revalidatePath("/me/applications");
   revalidatePath("/admin/applications");
   return application;
@@ -62,7 +69,10 @@ export async function submitApplicationAction(input: unknown) {
 
 export async function listMyApplicationsAction() {
   const sessionUser = await getSessionUser();
-  return listApplicationsByApplicant(sessionUser.name);
+  if (!sessionUser.id) {
+    return [];
+  }
+  return listApplicationsByApplicantUserId(sessionUser.id);
 }
 
 export async function reviewApplicationAction(input: unknown) {

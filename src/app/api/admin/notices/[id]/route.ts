@@ -3,6 +3,10 @@ import { z } from "zod";
 
 import { isContentManagerRole } from "@/lib/auth/authorization";
 import { getSessionUser } from "@/lib/auth/session";
+import {
+  extractPlainTextFromHtml,
+  sanitizeRichTextHtml,
+} from "@/lib/security/html-sanitize";
 import { assertCanEditCompetitionContent } from "@/server/permissions/competition-permissions";
 import {
   deleteNotice,
@@ -34,6 +38,14 @@ export async function PATCH(
     }
 
     const body = updateNoticeSchema.parse(await request.json());
+    const sanitizedContent =
+      body.content === undefined ? undefined : sanitizeRichTextHtml(body.content);
+    if (
+      sanitizedContent !== undefined &&
+      extractPlainTextFromHtml(sanitizedContent).length === 0
+    ) {
+      return NextResponse.json({ message: "通知内容不能为空" }, { status: 400 });
+    }
     const nextCompetitionId = body.competitionId ?? current.competitionId;
     assertCanEditCompetitionContent(
       {
@@ -46,7 +58,7 @@ export async function PATCH(
     const notice = await updateNotice(id, {
       competitionId: body.competitionId,
       title: body.title,
-      content: body.content,
+      content: sanitizedContent,
       status: body.status,
       operatorUserId: sessionUser.id,
     });

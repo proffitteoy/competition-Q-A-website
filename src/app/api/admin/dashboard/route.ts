@@ -12,6 +12,11 @@ interface TrendRow {
   total: number;
 }
 
+interface StatusDistributionRow {
+  status: "submitted" | "approved" | "rejected" | "withdrawn" | "cancelled" | "draft";
+  total: number;
+}
+
 function parseDate(value: string) {
   if (!value || value.includes("未") || value === "-") return undefined;
   const normalized = value.replace(" ", "T");
@@ -46,6 +51,38 @@ function buildWeeklyTrend(submittedAtList: string[]) {
   return result;
 }
 
+function countRecentSubmissions(submittedAtList: string[], days: number) {
+  const now = Date.now();
+  const threshold = now - days * 24 * 60 * 60 * 1000;
+
+  return submittedAtList.reduce((count, value) => {
+    const date = parseDate(value);
+    if (!date) return count;
+    return date.getTime() >= threshold && date.getTime() <= now ? count + 1 : count;
+  }, 0);
+}
+
+function buildStatusDistribution(
+  statuses: Array<
+    "draft" | "submitted" | "approved" | "rejected" | "withdrawn" | "cancelled"
+  >,
+): StatusDistributionRow[] {
+  const map = new Map<StatusDistributionRow["status"], number>([
+    ["draft", 0],
+    ["submitted", 0],
+    ["approved", 0],
+    ["rejected", 0],
+    ["withdrawn", 0],
+    ["cancelled", 0],
+  ]);
+
+  for (const status of statuses) {
+    map.set(status, (map.get(status) ?? 0) + 1);
+  }
+
+  return [...map.entries()].map(([status, total]) => ({ status, total }));
+}
+
 export async function GET() {
   const sessionUser = await getSessionUser();
   if (!isContentManagerRole(sessionUser.role)) {
@@ -59,15 +96,65 @@ export async function GET() {
     listAdminUsers(),
   ]);
 
-  const reviewTrend = buildWeeklyTrend(applications.map((item) => item.submittedAt));
+  const scopeIds =
+    sessionUser.role === "super_admin"
+      ? null
+      : new Set(sessionUser.scopedCompetitionIds);
+
+  const visibleCompetitions =
+    scopeIds === null
+      ? competitions
+      : competitions.filter((item) => scopeIds.has(item.id));
+
+  const visibleApplications =
+    scopeIds === null
+      ? applications
+      : applications.filter((item) => scopeIds.has(item.competitionId));
+
+  const visibleNotices =
+    scopeIds === null
+      ? notices
+      : notices.filter((item) => scopeIds.has(item.competitionId));
+
+  const reviewTrend = buildWeeklyTrend(
+    visibleApplications.map((item) => item.submittedAt),
+  );
+  const statusDistribution = buildStatusDistribution(
+    visibleApplications.map((item) => item.status),
+  );
+  const approvedCount = visibleApplications.filter(
+    (item) => item.status === "approved",
+  ).length;
+  const rejectedCount = visibleApplications.filter(
+    (item) => item.status === "rejected",
+  ).length;
+  const reviewClosedCount = approvedCount + rejectedCount;
+  const approvalRate =
+    reviewClosedCount === 0
+      ? 0
+      : Math.round((approvedCount / reviewClosedCount) * 100);
 
   return NextResponse.json({
     stats: {
-      competitions: competitions.length,
-      applications: applications.length,
-      notices: notices.length,
-      users: users.length,
+      competitions: visibleCompetitions.length,
+      applications: visibleApplications.length,
+      notices: visibleNotices.length,
+      users:
+        sessionUser.role === "super_admin"
+          ? users.length
+          : new Set(visibleApplications.map((item) => item.applicantName)).size,
+      activeCompetitions: visibleCompetitions.filter((item) =>
+        ["registration_open", "upcoming", "in_progress"].includes(item.status),
+      ).length,
+      pendingReviews: visibleApplications.filter((item) => item.status === "submitted")
+        .length,
+      thisWeekSubmissions: countRecentSubmissions(
+        visibleApplications.map((item) => item.submittedAt),
+        7,
+      ),
+      approvalRate,
     },
     reviewTrend,
+    statusDistribution,
   });
 }

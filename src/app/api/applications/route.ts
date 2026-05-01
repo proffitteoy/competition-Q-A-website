@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getSessionUser } from "@/lib/auth/session";
 import { submitApplicationService } from "@/server/services/application-service";
 
 const uploadedFileSchema = z.object({
@@ -30,8 +31,19 @@ const submitSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const sessionUser = await getSessionUser();
+    if (!sessionUser.id) {
+      return NextResponse.json(
+        { message: "请先登录后再提交报名。" },
+        { status: 401 },
+      );
+    }
+
     const body = submitSchema.parse(await request.json());
-    const application = await submitApplicationService(body);
+    const application = await submitApplicationService({
+      ...body,
+      applicantUserId: sessionUser.id,
+    });
     return NextResponse.json({ application }, { status: 201 });
   } catch (error) {
     const message =

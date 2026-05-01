@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { isAdminRole } from "@/lib/auth/authorization";
 import { getSessionUser } from "@/lib/auth/session";
 import { getApplicationById } from "@/server/repositories/application-repository";
 import { reviewApplicationService } from "@/server/services/application-service";
@@ -23,6 +24,17 @@ export async function POST(
     }
 
     const sessionUser = await getSessionUser();
+    if (!isAdminRole(sessionUser.role)) {
+      return NextResponse.json({ message: "无权执行该操作" }, { status: 403 });
+    }
+
+    if (
+      sessionUser.role !== "super_admin" &&
+      !sessionUser.scopedCompetitionIds.includes(application.competitionId)
+    ) {
+      return NextResponse.json({ message: "无权审核该比赛报名" }, { status: 403 });
+    }
+
     const nextApplication = await reviewApplicationService({
       id,
       competitionId: application.competitionId,

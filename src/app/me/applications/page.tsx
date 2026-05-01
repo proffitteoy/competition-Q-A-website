@@ -5,11 +5,13 @@ import { Section } from "@/components/marketing/section";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { getSessionUser } from "@/lib/auth/session";
-import { listApplicationsByApplicant } from "@/server/repositories/application-repository";
+import { listApplicationsByApplicantUserId } from "@/server/repositories/application-repository";
 
 export default async function MyApplicationsPage() {
   const sessionUser = await getSessionUser();
-  const applications = await listApplicationsByApplicant(sessionUser.name);
+  const applications = sessionUser.id
+    ? await listApplicationsByApplicantUserId(sessionUser.id)
+    : [];
 
   return (
     <div className="min-h-screen bg-background">

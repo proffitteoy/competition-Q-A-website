@@ -2,9 +2,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
-import type { UploadedFileMeta } from "@/lib/storage/types";
+import type { SaveUploadedFileInput, UploadedFileMeta } from "@/lib/storage/types";
 
-function sanitizeSegment(input: string) {
+export function sanitizeSegment(input: string) {
   return input
     .trim()
     .toLowerCase()
@@ -13,7 +13,7 @@ function sanitizeSegment(input: string) {
     .replace(/^-|-$/g, "");
 }
 
-function sanitizeFileName(input: string) {
+export function sanitizeFileName(input: string) {
   const normalized = input.replace(/[\\/:*?"<>|]/g, "-").trim();
   return normalized.length > 0 ? normalized : "file";
 }
@@ -26,14 +26,8 @@ function resolveUploadRootDir() {
   return path.join(process.cwd(), "public", "uploads");
 }
 
-interface SaveLocalFileInput {
-  file: File;
-  scope: "registration" | "notice" | "competition";
-  competitionId?: string;
-}
-
 export async function saveLocalFile(
-  input: SaveLocalFileInput,
+  input: SaveUploadedFileInput,
 ): Promise<UploadedFileMeta> {
   const rootDir = resolveUploadRootDir();
   const scopeDir = sanitizeSegment(input.scope);

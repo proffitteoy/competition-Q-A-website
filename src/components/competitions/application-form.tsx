@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -83,6 +83,7 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [materialFiles, setMaterialFiles] = useState<File[]>([]);
   const [extraFiles, setExtraFiles] = useState<File[]>([]);
+  const draftStorageKey = `application-draft:${competition.id}`;
 
   const form = useForm<ApplicationValues>({
     resolver: zodResolver(applicationSchema),
@@ -98,6 +99,54 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
       statement: "",
     },
   });
+
+  useEffect(() => {
+    const raw = window.localStorage.getItem(draftStorageKey);
+    if (!raw) {
+      return;
+    }
+
+    try {
+      const draft = JSON.parse(raw) as Partial<ApplicationValues> & {
+        savedAt?: number;
+      };
+      form.reset({
+        applicantName: draft.applicantName ?? "",
+        studentId: draft.studentId ?? "",
+        college: draft.college ?? "",
+        major: draft.major ?? "",
+        grade: draft.grade ?? "",
+        phone: draft.phone ?? "",
+        email: draft.email ?? "",
+        teamName: draft.teamName ?? "",
+        statement: draft.statement ?? "",
+      });
+      toast.success("已恢复本地草稿", {
+        description: "附件不会自动恢复，请重新上传。",
+      });
+    } catch {
+      window.localStorage.removeItem(draftStorageKey);
+    }
+  }, [draftStorageKey, form]);
+
+  const saveDraft = () => {
+    const draft = form.getValues();
+    window.localStorage.setItem(
+      draftStorageKey,
+      JSON.stringify({
+        ...draft,
+        savedAt: Date.now(),
+      }),
+    );
+    toast.success("草稿已暂存", {
+      description: "当前只保存表单文本字段，附件需重新上传。",
+    });
+  };
+
+  const clearDraft = () => {
+    window.localStorage.removeItem(draftStorageKey);
+    toast.success("本地草稿已清除");
+  };
 
   const onSubmit = async (values: ApplicationValues) => {
     if (competition.registrationMode === "team" && !values.teamName?.trim()) {
@@ -149,6 +198,7 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
       toast.success("Application submitted.", {
         description: `Application ID: ${payload.application?.id ?? "Created"}`,
       });
+      window.localStorage.removeItem(draftStorageKey);
       form.reset();
       setMaterialFiles([]);
       setExtraFiles([]);
@@ -317,8 +367,11 @@ export function ApplicationForm({ competition }: ApplicationFormProps) {
                 <Button type="submit" disabled={submitting}>
                   {submitting ? "Submitting..." : "Submit Application"}
                 </Button>
-                <Button type="button" variant="outline" disabled>
-                  Save Draft (TODO)
+                <Button type="button" variant="outline" onClick={saveDraft} disabled={submitting}>
+                  Save Draft
+                </Button>
+                <Button type="button" variant="outline" onClick={clearDraft} disabled={submitting}>
+                  Clear Draft
                 </Button>
               </div>
             </form>

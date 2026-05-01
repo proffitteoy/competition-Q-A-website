@@ -82,6 +82,7 @@ async function nextRegistrationNo(tx: DbTx) {
 export interface SubmitApplicationInput {
   competitionId: string;
   competitionTitle: string;
+  applicantUserId?: string;
   applicantName: string;
   studentId: string;
   college: string;
@@ -96,6 +97,40 @@ export interface SubmitApplicationInput {
 }
 
 async function ensureApplicantUser(tx: DbTx, input: SubmitApplicationInput) {
+  if (input.applicantUserId) {
+    const existingById = await tx.query.users.findFirst({
+      where: eq(users.id, input.applicantUserId),
+    });
+    if (!existingById) {
+      throw new Error("登录会话已失效，请重新登录后重试。");
+    }
+
+    if (
+      existingById.email &&
+      existingById.email.toLowerCase() !== input.email.toLowerCase()
+    ) {
+      throw new Error("报名邮箱必须与当前登录账号一致。");
+    }
+
+    const updated = await tx
+      .update(users)
+      .set({
+        name: input.applicantName,
+        email: input.email,
+        studentNo: input.studentId,
+        college: input.college,
+        major: input.major,
+        grade: input.grade,
+        phone: input.phone,
+        status: "active",
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, input.applicantUserId))
+      .returning();
+
+    return updated[0] ?? existingById;
+  }
+
   const existingByEmail = await tx.query.users.findFirst({
     where: eq(users.email, input.email),
   });
@@ -321,9 +356,15 @@ type QueryFilters = {
   status?: RegistrationStatus;
   competitionId?: string;
   applicantName?: string;
+  applicantUserId?: string;
+  allowedCompetitionIds?: string[];
 };
 
 function queryMockApplications(filters: QueryFilters = {}) {
+  if (filters.allowedCompetitionIds && filters.allowedCompetitionIds.length === 0) {
+    return [];
+  }
+
   const keyword = filters.keyword?.trim().toLowerCase();
 
   return [...mockApplications]
@@ -332,6 +373,14 @@ function queryMockApplications(filters: QueryFilters = {}) {
       if (filters.status && item.status !== filters.status) return false;
       if (filters.competitionId && item.competitionId !== filters.competitionId) return false;
       if (filters.applicantName && item.applicantName !== filters.applicantName) return false;
+      if (filters.applicantUserId) return false;
+      if (
+        filters.allowedCompetitionIds &&
+        filters.allowedCompetitionIds.length > 0 &&
+        !filters.allowedCompetitionIds.includes(item.competitionId)
+      ) {
+        return false;
+      }
 
       if (!keyword) return true;
 
@@ -343,6 +392,10 @@ function queryMockApplications(filters: QueryFilters = {}) {
 }
 
 async function queryApplications(filters: QueryFilters = {}) {
+  if (filters.allowedCompetitionIds && filters.allowedCompetitionIds.length === 0) {
+    return [];
+  }
+
   if (!isDatabaseConfigured()) {
     return queryMockApplications(filters);
   }
@@ -371,6 +424,14 @@ async function queryApplications(filters: QueryFilters = {}) {
 
   if (filters.competitionId) {
     conditions.push(eq(registrations.competitionId, filters.competitionId));
+  }
+
+  if (filters.allowedCompetitionIds && filters.allowedCompetitionIds.length > 0) {
+    conditions.push(inArray(registrations.competitionId, filters.allowedCompetitionIds));
+  }
+
+  if (filters.applicantUserId) {
+    conditions.push(eq(registrations.applicantUserId, filters.applicantUserId));
   }
 
   if (filters.applicantName) {
@@ -426,6 +487,10 @@ export async function listApplicationsWithFilters(filters: QueryFilters) {
 
 export async function listApplicationsByApplicant(applicantName: string) {
   return queryApplications({ applicantName });
+}
+
+export async function listApplicationsByApplicantUserId(applicantUserId: string) {
+  return queryApplications({ applicantUserId });
 }
 
 export async function getApplicationById(id: string) {

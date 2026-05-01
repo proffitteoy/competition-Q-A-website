@@ -10,13 +10,27 @@ import { roleAssignments, users } from "@/lib/db/schema";
 import type { UserRole } from "@/lib/mock-data";
 
 const loginSchema = z.object({
-  email: z.string().email("邮箱格式错误"),
+  email: z.string().trim().toLowerCase().email("邮箱格式错误"),
   password: z.string().min(6, "密码至少 6 位"),
 });
 
 type AuthUserRole = UserRole;
 const hasDb = isDatabaseConfigured();
 const db = hasDb ? getDb() : null;
+const isProduction = process.env.NODE_ENV === "production";
+const authSecret = process.env.AUTH_SECRET?.trim();
+
+function parseSessionMaxAgeSeconds() {
+  const raw = Number(process.env.AUTH_SESSION_MAX_AGE_SECONDS ?? "43200");
+  if (!Number.isFinite(raw) || raw <= 0) {
+    return 43200;
+  }
+  return Math.floor(raw);
+}
+
+if (isProduction && (!authSecret || authSecret.length < 32)) {
+  throw new Error("AUTH_SECRET 未配置或长度不足 32，生产环境已拒绝启动。");
+}
 
 function pickPrimaryRole(roles: { role: AuthUserRole }[]): AuthUserRole {
   if (roles.some((item) => item.role === "super_admin")) return "super_admin";
@@ -47,7 +61,17 @@ async function resolveUserRole(userId: string) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
+  secret: authSecret,
+  trustHost: true,
+  useSecureCookies: isProduction,
+  session: {
+    strategy: "jwt",
+    maxAge: parseSessionMaxAgeSeconds(),
+    updateAge: 60 * 60,
+  },
+  jwt: {
+    maxAge: parseSessionMaxAgeSeconds(),
+  },
   pages: {
     signIn: "/sign-in",
   },
@@ -81,6 +105,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: eq(users.email, email),
         });
         if (!user || !user.passwordHash) {
+          return null;
+        }
+        if (user.status !== "active") {
           return null;
         }
 

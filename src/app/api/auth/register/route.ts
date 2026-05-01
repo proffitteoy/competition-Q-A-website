@@ -4,17 +4,25 @@ import { hash } from "bcryptjs";
 import { eq } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
+import { isDatabaseConfigured } from "@/lib/db/config";
 import { roleAssignments, users } from "@/lib/db/schema";
 
 const registerSchema = z.object({
   name: z.string().min(2, "请输入姓名"),
-  studentId: z.string().min(6, "请输入有效学号"),
-  email: z.string().email("请输入有效邮箱"),
+  studentId: z.string().regex(/^\d{9}$/, "学号必须为9位数字"),
+  email: z.string().trim().toLowerCase().email("请输入有效邮箱"),
   password: z.string().min(6, "密码至少需要 6 位"),
 });
 
 export async function POST(request: Request) {
   try {
+    if (!isDatabaseConfigured()) {
+      return NextResponse.json(
+        { message: "当前环境未配置数据库，暂不可注册账号" },
+        { status: 503 },
+      );
+    }
+
     const db = getDb();
     const body = registerSchema.parse(await request.json());
 

@@ -30,15 +30,17 @@ import { cn } from "@/lib/utils";
 
 const signupFormSchema = z
   .object({
-    name: z.string().min(2, "Please enter your name."),
-    studentId: z.string().min(6, "Please enter a valid student ID."),
-    email: z.string().email("Please enter a valid email address."),
-    password: z.string().min(6, "Password must be at least 6 characters."),
-    confirmPassword: z.string().min(6, "Please confirm your password."),
-    terms: z.boolean().refine((value) => value, "Please accept the terms."),
+    name: z.string().min(2, "请输入姓名"),
+    studentId: z
+      .string()
+      .regex(/^\d{9}$/, "学号必须为9位数字"),
+    email: z.string().email("请输入有效的邮箱地址"),
+    password: z.string().min(6, "密码至少需要6个字符"),
+    confirmPassword: z.string().min(6, "请再次输入密码"),
+    terms: z.boolean().refine((value) => value, "请同意平台使用条款"),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match.",
+    message: "两次输入的密码不一致",
     path: ["confirmPassword"],
   });
 
@@ -85,7 +87,7 @@ export function SignupForm1({
       };
 
       if (!registerResponse.ok) {
-        throw new Error(registerPayload.message ?? "Failed to register.");
+        throw new Error(registerPayload.message ?? "注册失败");
       }
 
       const callbackUrl = searchParams.get("callbackUrl") ?? "/admin";
@@ -97,16 +99,16 @@ export function SignupForm1({
       });
 
       if (!signInResult || signInResult.error) {
-        toast.success("Account created. Please sign in.");
+        toast.success("注册成功，请登录");
         router.push("/sign-in");
         return;
       }
 
-      toast.success("Account created and signed in.");
+      toast.success("注册成功，已自动登录");
       router.push(signInResult.url ?? callbackUrl);
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to register.";
+      const message = error instanceof Error ? error.message : "注册失败";
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -117,9 +119,9 @@ export function SignupForm1({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Create Account</CardTitle>
+          <CardTitle className="text-xl">注册账号</CardTitle>
           <CardDescription>
-            Register as a student to submit and track competition applications.
+            注册学生账号以提交和跟踪竞赛申报
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -133,9 +135,9 @@ export function SignupForm1({
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Name</FormLabel>
+                          <FormLabel>姓名</FormLabel>
                           <FormControl>
-                            <Input placeholder="Your name" {...field} />
+                            <Input placeholder="请输入姓名" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -146,9 +148,9 @@ export function SignupForm1({
                       name="studentId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Student ID</FormLabel>
+                          <FormLabel>学号</FormLabel>
                           <FormControl>
-                            <Input placeholder="2023123456" {...field} />
+                            <Input placeholder="9位数字学号" maxLength={9} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -161,7 +163,7 @@ export function SignupForm1({
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>邮箱</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
@@ -180,7 +182,7 @@ export function SignupForm1({
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>密码</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
@@ -198,7 +200,7 @@ export function SignupForm1({
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
+                        <FormLabel>确认密码</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
@@ -224,8 +226,7 @@ export function SignupForm1({
                           />
                         </FormControl>
                         <FormLabel className="text-sm">
-                          I confirm the submitted information is valid and I accept
-                          the platform terms.
+                          我确认提交的信息真实有效，并同意平台使用条款
                         </FormLabel>
                       </FormItem>
                     )}
@@ -236,14 +237,14 @@ export function SignupForm1({
                     className="w-full cursor-pointer"
                     disabled={submitting}
                   >
-                    {submitting ? "Creating..." : "Create Account"}
+                    {submitting ? "注册中..." : "注册"}
                   </Button>
                 </div>
 
                 <div className="text-center text-sm">
-                  Already have an account?{" "}
+                  已有账号？{" "}
                   <a href="/sign-in" className="underline underline-offset-4">
-                    Sign in
+                    立即登录
                   </a>
                 </div>
               </div>

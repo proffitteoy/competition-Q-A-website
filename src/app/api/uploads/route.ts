@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { isContentManagerRole } from "@/lib/auth/authorization";
 import { getSessionUser } from "@/lib/auth/session";
+import { assertCanEditCompetitionContent } from "@/server/permissions/competition-permissions";
 import { uploadFilesService } from "@/server/services/upload-service";
 
 const scopeSchema = z.enum(["registration", "notice", "competition"]);
@@ -25,8 +27,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "No files uploaded." }, { status: 400 });
     }
 
-    // Keep auth access pattern consistent with current MVP.
-    await getSessionUser();
+    const sessionUser = await getSessionUser();
+    if (!sessionUser.id) {
+      return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+    }
+
+    if (!competitionId) {
+      return NextResponse.json(
+        { message: "competitionId is required for uploads." },
+        { status: 400 },
+      );
+    }
+
+    if (scope !== "registration") {
+      if (!isContentManagerRole(sessionUser.role)) {
+        return NextResponse.json({ message: "Forbidden." }, { status: 403 });
+      }
+
+      assertCanEditCompetitionContent(
+        {
+          role: sessionUser.role,
+          scopedCompetitionIds: sessionUser.scopedCompetitionIds,
+        },
+        competitionId,
+      );
+    }
 
     const uploaded = await uploadFilesService({
       files,

@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 import { isAdminRole } from "@/lib/auth/authorization";
 import { getSessionUser } from "@/lib/auth/session";
 import {
-  listApplications,
+  listApplicationsWithFilters,
   listRegistrationAuditLogsByApplicationIds,
 } from "@/server/repositories/application-repository";
 
@@ -21,8 +21,22 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const format = (url.searchParams.get("format") ?? "csv").toLowerCase();
+  const competitionId = url.searchParams.get("competitionId")?.trim() || undefined;
+  if (
+    sessionUser.role !== "super_admin" &&
+    competitionId &&
+    !sessionUser.scopedCompetitionIds.includes(competitionId)
+  ) {
+    return NextResponse.json({ message: "无权导出该比赛数据" }, { status: 403 });
+  }
 
-  const applications = await listApplications();
+  const applications = await listApplicationsWithFilters({
+    competitionId,
+    allowedCompetitionIds:
+      sessionUser.role === "super_admin"
+        ? undefined
+        : sessionUser.scopedCompetitionIds,
+  });
 
   const headers = [
     "报名编号",

@@ -13,7 +13,12 @@ interface PortalNoticeBoardProps {
 }
 
 function buildNoticeExcerpt(content: string) {
-  const normalized = content.replace(/\s+/g, " ").trim();
+  const normalized = content
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!normalized) {
     return "公告详情已同步到对应比赛页，可前往查看完整安排、阶段要求与附件说明。";
   }

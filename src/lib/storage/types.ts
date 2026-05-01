@@ -6,3 +6,11 @@ export interface UploadedFileMeta {
   sizeBytes: number;
   mimeType: string;
 }
+
+export type UploadScope = "registration" | "notice" | "competition";
+
+export interface SaveUploadedFileInput {
+  file: File;
+  scope: UploadScope;
+  competitionId?: string;
+}

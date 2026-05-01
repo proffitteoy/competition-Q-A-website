@@ -61,7 +61,7 @@ export async function GET() {
 
   const competitions = await listCompetitions();
   const visible =
-    sessionUser.role === "super_admin" || sessionUser.scopedCompetitionIds.length === 0
+    sessionUser.role === "super_admin"
       ? competitions
       : competitions.filter((item) => sessionUser.scopedCompetitionIds.includes(item.id));
 

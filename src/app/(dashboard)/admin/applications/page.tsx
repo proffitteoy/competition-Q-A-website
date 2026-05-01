@@ -219,7 +219,11 @@ export default function AdminApplicationsPage() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  window.open("/api/admin/applications/export?format=csv", "_blank");
+                  const params = new URLSearchParams({ format: "csv" });
+                  if (competitionId !== "all") {
+                    params.set("competitionId", competitionId);
+                  }
+                  window.open(`/api/admin/applications/export?${params.toString()}`, "_blank");
                 }}
               >
                 导出 CSV
@@ -227,7 +231,11 @@ export default function AdminApplicationsPage() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  window.open("/api/admin/applications/export?format=xlsx", "_blank");
+                  const params = new URLSearchParams({ format: "xlsx" });
+                  if (competitionId !== "all") {
+                    params.set("competitionId", competitionId);
+                  }
+                  window.open(`/api/admin/applications/export?${params.toString()}`, "_blank");
                 }}
               >
                 导出 XLSX

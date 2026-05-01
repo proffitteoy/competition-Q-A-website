@@ -38,7 +38,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "筛选参数不合法" }, { status: 400 });
   }
 
-  const applications = await listApplicationsWithFilters(parsed.data);
+  if (
+    sessionUser.role !== "super_admin" &&
+    parsed.data.competitionId &&
+    !sessionUser.scopedCompetitionIds.includes(parsed.data.competitionId)
+  ) {
+    return NextResponse.json({ message: "无权访问该比赛数据" }, { status: 403 });
+  }
+
+  const applications = await listApplicationsWithFilters({
+    ...parsed.data,
+    allowedCompetitionIds:
+      sessionUser.role === "super_admin"
+        ? undefined
+        : sessionUser.scopedCompetitionIds,
+  });
   return NextResponse.json({ applications });
 }
 
@@ -48,6 +62,24 @@ export async function POST(request: Request) {
     const sessionUser = await getSessionUser();
     if (!isAdminRole(sessionUser.role)) {
       return NextResponse.json({ message: "无权执行该操作" }, { status: 403 });
+    }
+
+    if (
+      sessionUser.role !== "super_admin" &&
+      !body.competitionId
+    ) {
+      return NextResponse.json(
+        { message: "请先按比赛筛选，再执行批量审核" },
+        { status: 400 },
+      );
+    }
+
+    if (
+      sessionUser.role !== "super_admin" &&
+      body.competitionId &&
+      !sessionUser.scopedCompetitionIds.includes(body.competitionId)
+    ) {
+      return NextResponse.json({ message: "无权处理该比赛报名" }, { status: 403 });
     }
 
     const result = await bulkReviewApplicationsService({

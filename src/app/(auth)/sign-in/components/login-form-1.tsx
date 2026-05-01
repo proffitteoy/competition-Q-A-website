@@ -28,8 +28,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 const loginFormSchema = z.object({
-  email: z.string().email("Please enter a valid email address."),
-  password: z.string().min(6, "Password must be at least 6 characters."),
+  email: z.string().email("请输入有效的邮箱地址"),
+  password: z.string().min(6, "密码至少需要6个字符"),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -61,15 +61,15 @@ export function LoginForm1({
       });
 
       if (!result || result.error) {
-        toast.error("Invalid email or password.");
+        toast.error("邮箱或密码错误");
         return;
       }
 
-      toast.success("Signed in successfully.");
+      toast.success("登录成功");
       router.push(result.url ?? callbackUrl);
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to sign in.";
+      const message = error instanceof Error ? error.message : "登录失败";
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -80,9 +80,9 @@ export function LoginForm1({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Sign In</CardTitle>
+          <CardTitle className="text-xl">登录</CardTitle>
           <CardDescription>
-            Use your account to access applications and the admin workspace.
+            使用您的账号访问竞赛申报和管理平台
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -95,7 +95,7 @@ export function LoginForm1({
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>邮箱</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
@@ -114,12 +114,12 @@ export function LoginForm1({
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center">
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel>密码</FormLabel>
                           <a
                             href="/forgot-password"
                             className="ml-auto text-sm underline-offset-4 hover:underline"
                           >
-                            Forgot password?
+                            忘记密码？
                           </a>
                         </div>
                         <FormControl>
@@ -139,14 +139,14 @@ export function LoginForm1({
                     className="w-full cursor-pointer"
                     disabled={submitting}
                   >
-                    {submitting ? "Signing in..." : "Sign In"}
+                    {submitting ? "登录中..." : "登录"}
                   </Button>
                 </div>
 
                 <div className="text-center text-sm">
-                  No account yet?{" "}
+                  还没有账号？{" "}
                   <a href="/sign-up" className="underline underline-offset-4">
-                    Create one
+                    立即注册
                   </a>
                 </div>
               </div>

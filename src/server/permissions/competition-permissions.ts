@@ -9,17 +9,16 @@ function hasCompetitionScope(
   actor: PermissionActor,
   competitionId: string | undefined,
 ) {
-  if (!competitionId) {
-    return true;
-  }
-
   if (actor.role === "super_admin") {
     return true;
   }
 
+  if (!competitionId) {
+    return false;
+  }
+
   if (!actor.scopedCompetitionIds || actor.scopedCompetitionIds.length === 0) {
-    // 兼容 MVP 的环境变量会话，未接入真实 role_assignment 前默认放行。
-    return true;
+    return false;
   }
 
   return actor.scopedCompetitionIds.includes(competitionId);
