@@ -146,7 +146,7 @@ export function PortalNavbar({ currentUser }: PortalNavbarProps) {
                 asChild
                 className="border-slate-300 bg-white/85 text-slate-900 hover:bg-slate-50"
               >
-                <Link href="/me/applications">我的报名</Link>
+                <Link href="/me">个人中心</Link>
               </Button>
               {showAdminEntry ? (
                 <Button
@@ -201,10 +201,10 @@ export function PortalNavbar({ currentUser }: PortalNavbarProps) {
                 />
               ))}
               <Link
-                href={resolvedUser ? "/me/applications" : "/sign-in"}
+                href={resolvedUser ? "/me" : "/sign-in"}
                 className="text-base font-medium text-slate-950"
               >
-                {resolvedUser ? "我的报名" : "登录"}
+                {resolvedUser ? "个人中心" : "登录"}
               </Link>
               {showAdminEntry ? (
                 <Link href="/admin" className="text-base font-medium text-slate-950">

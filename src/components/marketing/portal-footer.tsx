@@ -29,7 +29,7 @@ export function PortalFooter() {
             <Link href="/competitions">比赛列表</Link>
             <Link href="/#latest-notices">通知公告</Link>
             <Link href="/#hall-of-fame">名人堂</Link>
-            <Link href="/me/applications">我的报名</Link>
+            <Link href="/me">个人中心</Link>
           </div>
         </div>
         <div className="space-y-3">

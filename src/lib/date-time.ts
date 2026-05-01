@@ -1,5 +1,40 @@
-const APP_TIME_ZONE =
-  process.env.APP_TIME_ZONE?.trim() || process.env.TZ?.trim() || "Asia/Shanghai";
+function normalizeTimeZone(raw: string | undefined) {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith(":")) {
+    return trimmed.slice(1) || null;
+  }
+  return trimmed;
+}
+
+function isValidTimeZone(timeZone: string) {
+  try {
+    new Intl.DateTimeFormat("zh-CN", { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function resolveAppTimeZone() {
+  const candidates = [
+    normalizeTimeZone(process.env.APP_TIME_ZONE),
+    normalizeTimeZone(process.env.TZ),
+    "Asia/Shanghai",
+    "UTC",
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate && isValidTimeZone(candidate)) {
+      return candidate;
+    }
+  }
+
+  return "UTC";
+}
+
+const APP_TIME_ZONE = resolveAppTimeZone();
 
 const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   timeZone: APP_TIME_ZONE,

@@ -664,6 +664,44 @@ export const questionComments = pgTable(
   }),
 );
 
+export const genderEnum = pgEnum("gender", ["male", "female", "other"]);
+
+export const inSchoolStatusEnum = pgEnum("in_school_status", [
+  "yes",
+  "no",
+  "graduated",
+]);
+
+export const userProfiles = pgTable("user_profile", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  nickname: varchar("nickname", { length: 100 }),
+  gender: genderEnum("gender"),
+  birthday: timestamp("birthday", { mode: "date" }),
+  schoolName: varchar("school_name", { length: 200 }),
+  department: varchar("department", { length: 120 }),
+  enrollmentYear: integer("enrollment_year"),
+  educationLevel: varchar("education_level", { length: 64 }),
+  inSchoolStatus: inSchoolStatusEnum("in_school_status"),
+  publicBio: text("public_bio"),
+  skillTags: jsonb("skill_tags")
+    .$type<string[]>()
+    .default(sql`'[]'::jsonb`)
+    .notNull(),
+  publicShowAvatar: boolean("public_show_avatar").default(true).notNull(),
+  publicShowCollegeMajor: boolean("public_show_college_major")
+    .default(true)
+    .notNull(),
+  publicShowTitles: boolean("public_show_titles").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const authAccounts = pgTable(
   "auth_account",
   {
