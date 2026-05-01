@@ -1,6 +1,9 @@
 import { getSessionUser } from "@/lib/auth/session";
 import { isDatabaseConfigured } from "@/lib/db/config";
-import { listMyExperiencePosts } from "@/server/repositories/experience-post-repository";
+import {
+  listMyExperiencePosts,
+  type ExperiencePostRow,
+} from "@/server/repositories/experience-post-repository";
 import { PageHeader } from "@/components/shared/page-header";
 import { ExperiencePostList } from "@/components/profile/experience-post-list";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -25,7 +28,12 @@ export default async function MyAchievementsPage() {
     );
   }
 
-  const posts = await listMyExperiencePosts(userId);
+  let posts: ExperiencePostRow[] = [];
+  try {
+    posts = await listMyExperiencePosts(userId);
+  } catch {
+    // table may not exist yet if migration hasn't run
+  }
 
   return (
     <div className="space-y-8">
