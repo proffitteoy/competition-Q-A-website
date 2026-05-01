@@ -211,7 +211,7 @@ export default function AdminApplicationsPage() {
     <div className="px-4 lg:px-6">
       <div className="space-y-8">
         <PageHeader
-          eyebrow="Applications"
+          eyebrow="报名审核"
           title="报名审核"
           description="该页面已接入真实数据层，支持筛选、批量审核、CSV/XLSX 导出与单条审核。"
           actions={

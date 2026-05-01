@@ -1,9 +1,13 @@
 import process from "node:process";
 
+import { config as loadEnv } from "dotenv";
 import pg from "pg";
 import { hash } from "bcryptjs";
 
 const { Client } = pg;
+
+loadEnv({ path: ".env.local" });
+loadEnv({ path: ".env" });
 
 const userSeeds = [
   {
@@ -154,6 +158,96 @@ const competitionSeeds = [
     attachments: ["获奖名单.pdf"],
     relatedQuestions: ["评审最看重哪些维度？"],
   },
+  {
+    slug: "ai-product-design-2026",
+    title: "2026 AI 产品创新设计赛",
+    category: "产品设计",
+    status: "draft",
+    summary: "面向跨学科团队的 AI 产品创新赛，目前处于草稿筹备阶段。",
+    department: "创新创业学院",
+    registrationMode: "team",
+    registrationWindow: "2026-07-01 至 2026-07-20",
+    eventWindow: "2026-08-05 至 2026-10-20",
+    location: "创客中心 201",
+    coverLabel: "AI 产品创新",
+    description: "用于管理员演练草稿比赛创建、编辑、发布流程。",
+    highlights: ["草稿状态样例", "跨学科组队", "产品路演答辩"],
+    timeline: [
+      {
+        label: "方案评审",
+        date: "2026-07-10",
+        description: "内部评审赛题与评分细则。",
+      },
+    ],
+    faqs: [
+      {
+        question: "草稿状态对学生是否可见？",
+        answer: "草稿默认不在门户展示，仅管理员可见。",
+      },
+    ],
+    attachments: ["赛题草案.docx"],
+    relatedQuestions: ["产品原型提交格式是什么？"],
+  },
+  {
+    slug: "data-analysis-marathon-2024",
+    title: "2024 数据分析马拉松",
+    category: "数据分析",
+    status: "archived",
+    summary: "往届归档赛事，用于验证归档比赛在后台的展示与筛选。",
+    department: "统计与数据科学学院",
+    registrationMode: "individual",
+    registrationWindow: "2024-03-01 至 2024-03-20",
+    eventWindow: "2024-04-01 至 2024-06-30",
+    location: "统计楼 B102",
+    coverLabel: "历史赛事归档",
+    description: "供后台查看历史状态与资料下载。",
+    highlights: ["归档状态样例", "历史榜单沉淀"],
+    timeline: [
+      {
+        label: "归档完成",
+        date: "2024-07-05",
+        description: "赛事资料与榜单归档完成。",
+      },
+    ],
+    faqs: [],
+    attachments: ["往届题目包.zip", "决赛评分表.xlsx"],
+    relatedQuestions: ["历史获奖名单如何查看？"],
+  },
+];
+
+const noticeSeeds = [
+  {
+    competitionSlug: "math-modeling-2026",
+    title: "建模训练营分组名单发布",
+    content:
+      "<p>请报名通过的队伍于 <strong>5月12日</strong> 前加入训练营群，并确认指导教师。</p>",
+    status: "published",
+    publishedAt: "2026-05-08 10:00",
+  },
+  {
+    competitionSlug: "robot-innovation-2026",
+    title: "机器人赛项目摘要提交通知",
+    content:
+      "<p>请在 <strong>6月5日 18:00</strong> 前提交项目摘要和分工说明，逾期将影响评审。</p>",
+    status: "published",
+    publishedAt: "2026-05-22 09:30",
+  },
+  {
+    competitionSlug: "programming-contest-2026",
+    title: "程序设计校赛题解直播预告",
+    content:
+      "<p>本周五晚 20:00 进行题解直播，重点讲解动态规划与图论专题。</p>",
+    status: "draft",
+    publishedAt: null,
+  },
+  {
+    competitionSlug: "finance-case-2025",
+    title: "商业分析案例赛复盘纪要",
+    content:
+      "<p>往届复盘资料已更新，请在比赛详情页下载完整附件。</p>",
+    status: "withdrawn",
+    publishedAt: "2025-12-05 16:00",
+  },
 ];
 
 const applicationSeeds = [
@@ -209,6 +303,32 @@ const applicationSeeds = [
     reviewer: "王老师",
     note: "已进入校赛集训名单。",
   },
+  {
+    id: "APP-2026-005",
+    competitionSlug: "robot-innovation-2026",
+    applicantName: "吴昊天",
+    college: "智能制造学院",
+    major: "自动化",
+    grade: "2022 级",
+    submittedAt: "2026-05-25 13:18",
+    mode: "team",
+    status: "withdrawn",
+    reviewer: "赵老师",
+    note: "申请人因课程冲突主动撤回报名。",
+  },
+  {
+    id: "APP-2026-006",
+    competitionSlug: "finance-case-2025",
+    applicantName: "林若溪",
+    college: "商学院",
+    major: "金融学",
+    grade: "2021 级",
+    submittedAt: "2025-09-10 15:40",
+    mode: "team",
+    status: "cancelled",
+    reviewer: "王老师",
+    note: "因队伍信息不完整且逾期未补充，管理员取消报名。",
+  },
 ];
 
 function parseDateTime(raw) {
@@ -225,7 +345,41 @@ function parseDateRange(raw) {
 }
 
 function buildDatabaseUrl() {
-  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  if (process.env.DATABASE_URL?.trim()) {
+    const raw = process.env.DATABASE_URL.trim();
+    try {
+      new URL(raw);
+      return raw;
+    } catch {
+      const schemeIndex = raw.indexOf("://");
+      if (schemeIndex <= 0) {
+        throw new Error("DATABASE_URL 格式不合法。");
+      }
+      const prefix = raw.slice(0, schemeIndex + 3);
+      const rest = raw.slice(schemeIndex + 3);
+      const slashIndex = rest.indexOf("/");
+      if (slashIndex < 0) {
+        throw new Error("DATABASE_URL 格式不合法。");
+      }
+      const authority = rest.slice(0, slashIndex);
+      const path = rest.slice(slashIndex + 1);
+      const atIndex = authority.lastIndexOf("@");
+      if (atIndex < 0) {
+        throw new Error("DATABASE_URL 缺少账号信息。");
+      }
+      const rawAuth = authority.slice(0, atIndex);
+      const host = authority.slice(atIndex + 1);
+      const colonIndex = rawAuth.indexOf(":");
+      if (colonIndex < 0) {
+        throw new Error("DATABASE_URL 缺少密码信息。");
+      }
+      const rawUser = rawAuth.slice(0, colonIndex);
+      const rawPassword = rawAuth.slice(colonIndex + 1);
+      const user = encodeURIComponent(decodeURIComponent(rawUser));
+      const password = encodeURIComponent(decodeURIComponent(rawPassword));
+      return `${prefix}${user}:${password}@${host}/${path}`;
+    }
+  }
   const host = process.env.PGHOST;
   const port = process.env.PGPORT;
   const database = process.env.PGDATABASE;
@@ -354,6 +508,27 @@ async function main() {
     }
 
     const adminId = userIdByName.get("平台管理员");
+
+    for (const notice of noticeSeeds) {
+      const competitionId = competitionIdBySlug.get(notice.competitionSlug);
+      if (!competitionId) continue;
+
+      const publishedAt = notice.publishedAt ? parseDateTime(notice.publishedAt) : null;
+      await client.query(
+        `INSERT INTO competition_notice
+         (competition_id, title, content, status, published_at, created_by, updated_by)
+         VALUES ($1, $2, $3, $4::notice_status, $5, $6, $6)`,
+        [
+          competitionId,
+          notice.title,
+          notice.content,
+          notice.status,
+          publishedAt,
+          adminId ?? null,
+        ],
+      );
+    }
+
     if (adminId) {
       await client.query(
         `INSERT INTO role_assignment (user_id, role, scope_type) VALUES ($1, 'super_admin'::user_role, 'global'::role_scope)`,

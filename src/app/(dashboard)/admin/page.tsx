@@ -98,7 +98,7 @@ export default function AdminHomePage() {
         const response = await fetch("/api/admin/dashboard", { cache: "no-store" });
         const data = (await response.json()) as DashboardPayload & { message?: string };
         if (!response.ok) {
-          throw new Error(data.message ?? "Failed to load dashboard.");
+          throw new Error(data.message ?? "加载管理看板失败");
         }
 
         if (!cancelled) {
@@ -107,7 +107,7 @@ export default function AdminHomePage() {
       } catch (error) {
         if (!cancelled) {
           const message =
-            error instanceof Error ? error.message : "Failed to load dashboard.";
+            error instanceof Error ? error.message : "加载管理看板失败";
           toast.error(message);
         }
       } finally {
@@ -127,58 +127,58 @@ export default function AdminHomePage() {
     <div className="px-4 lg:px-6">
       <div className="space-y-8">
         <PageHeader
-          eyebrow="Admin Dashboard"
-          title="Competition Operations Dashboard"
-          description="Live summary of competitions, applications, notices, and user workload."
+          eyebrow="后台总览"
+          title="竞赛运营看板"
+          description="实时汇总比赛、报名、通知与用户工作负载。"
         />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatsCard
-            label="Competitions"
+            label="比赛总数"
             value={String(payload.stats.competitions)}
-            description="Total competitions currently tracked"
+            description="当前纳管的比赛记录总数"
             icon={<Trophy className="size-5 text-primary" />}
           />
           <StatsCard
-            label="Applications"
+            label="报名总数"
             value={String(payload.stats.applications)}
-            description="Total application records"
+            description="累计报名申请记录"
             icon={<ClipboardCheck className="size-5 text-primary" />}
           />
           <StatsCard
-            label="Notices"
+            label="通知总数"
             value={String(payload.stats.notices)}
-            description="Published and draft notices"
+            description="已发布与草稿通知总计"
             icon={<Megaphone className="size-5 text-primary" />}
           />
           <StatsCard
-            label="Users"
+            label="用户总数"
             value={String(payload.stats.users)}
-            description="User accounts with role assignments"
+            description="含角色授权的用户账号"
             icon={<Users className="size-5 text-primary" />}
           />
           <StatsCard
-            label="Active Competitions"
+            label="活跃比赛"
             value={String(payload.stats.activeCompetitions)}
-            description="Upcoming / ongoing registrations"
+            description="即将开始或报名中的比赛"
             icon={<Activity className="size-5 text-primary" />}
           />
           <StatsCard
-            label="Pending Reviews"
+            label="待审核报名"
             value={String(payload.stats.pendingReviews)}
-            description="Applications waiting for review"
+            description="尚未完成审核的报名记录"
             icon={<ListChecks className="size-5 text-primary" />}
           />
           <StatsCard
-            label="New This Week"
+            label="本周新增"
             value={String(payload.stats.thisWeekSubmissions)}
-            description="Applications submitted in last 7 days"
+            description="近 7 天新增报名数"
             icon={<ClipboardCheck className="size-5 text-primary" />}
           />
           <StatsCard
-            label="Approval Rate"
+            label="通过率"
             value={`${payload.stats.approvalRate}%`}
-            description="Approved / (Approved + Rejected)"
+            description="已通过 /（已通过 + 已驳回）"
             icon={<ShieldCheck className="size-5 text-primary" />}
           />
         </div>
@@ -186,12 +186,12 @@ export default function AdminHomePage() {
         <div className="grid gap-4 xl:grid-cols-2">
           <Card className="border-border/60">
             <CardHeader>
-              <CardTitle>Application Trend (4 Weeks)</CardTitle>
+              <CardTitle>报名趋势（近 4 周）</CardTitle>
             </CardHeader>
             <CardContent className="h-[320px]">
               {loading ? (
                 <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                  Loading dashboard...
+                  看板加载中...
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -209,12 +209,12 @@ export default function AdminHomePage() {
 
           <Card className="border-border/60">
             <CardHeader>
-              <CardTitle>Application Status Mix</CardTitle>
+              <CardTitle>报名状态分布</CardTitle>
             </CardHeader>
             <CardContent className="h-[320px]">
               {loading ? (
                 <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                  Loading dashboard...
+                  看板加载中...
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">

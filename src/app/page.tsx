@@ -1,6 +1,7 @@
 import { PortalFaq } from "@/components/marketing/portal-faq";
 import { PortalFeaturedCompetitions } from "@/components/marketing/portal-featured-competitions";
 import { PortalFooter } from "@/components/marketing/portal-footer";
+import { PortalHallOfFame } from "@/components/marketing/portal-hall-of-fame";
 import { PortalHero } from "@/components/marketing/portal-hero";
 import { PortalNavbar } from "@/components/marketing/portal-navbar";
 import { PortalNoticeBoard } from "@/components/marketing/portal-notice-board";
@@ -33,10 +34,10 @@ export default async function HomePage() {
       description: "已发布公告统一回到比赛详情页查看完整安排。",
     },
     {
-      href: "/#resource-library",
-      label: "资料入口",
-      value: `${homepageData.resourceLibrary.length} 份`,
-      description: "报名模板、说明文档和常用资料集中收拢。",
+      href: "/#hall-of-fame",
+      label: "名人堂",
+      value: `${homepageData.hallOfFameEntries.length} 位`,
+      description: "展示活跃竞赛人物和获奖经验分享。",
     },
     {
       href: session?.user ? "/me/applications" : "/sign-in",
@@ -67,6 +68,7 @@ export default async function HomePage() {
         competitions={homepageData.featuredCompetitions.slice(0, 3)}
       />
       <PortalNoticeBoard notices={homepageData.latestNotices} />
+      <PortalHallOfFame entries={homepageData.hallOfFameEntries} />
       <PortalResourceBoard resources={homepageData.resourceLibrary} />
       <PortalFaq faqs={homepageData.featuredFaqs} />
       <PortalFooter />

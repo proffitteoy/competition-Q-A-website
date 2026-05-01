@@ -345,6 +345,46 @@ export const users: PlatformUser[] = [
     email: "super@college.example",
     status: "active",
   },
+  {
+    id: "USR-005",
+    name: "陈思远",
+    role: "student_user",
+    college: "数学学院",
+    email: "chensy@stu.example",
+    status: "active",
+  },
+  {
+    id: "USR-006",
+    name: "李卓航",
+    role: "student_user",
+    college: "智能制造学院",
+    email: "lizh@stu.example",
+    status: "active",
+  },
+  {
+    id: "USR-007",
+    name: "周若宁",
+    role: "student_user",
+    college: "计算机学院",
+    email: "zhournl@stu.example",
+    status: "active",
+  },
+  {
+    id: "USR-008",
+    name: "林晓薇",
+    role: "student_user",
+    college: "商学院",
+    email: "linxw@stu.example",
+    status: "active",
+  },
+  {
+    id: "USR-009",
+    name: "吴泽宇",
+    role: "student_user",
+    college: "计算机学院",
+    email: "wuzy@stu.example",
+    status: "active",
+  },
 ];
 
 export const notices: NoticeRecord[] = [
@@ -379,6 +419,162 @@ export const homepageFaqs = [
     question: "为什么不直接做完整社区？",
     answer:
       "问答在这个项目里是辅助模块，应该服务竞赛答疑和知识沉淀，而不是反客为主。",
+  },
+];
+
+export interface HallOfFameEntry {
+  id: string;
+  userId: string;
+  userName: string;
+  userImage: string | null;
+  college: string;
+  tag: string;
+  bio: string;
+  displayOrder: number;
+}
+
+export interface ExperiencePost {
+  id: string;
+  userId: string;
+  userName: string;
+  competitionId: string | null;
+  competitionTitle: string;
+  title: string;
+  content: string;
+  awardLevel: string;
+  coverImage: string | null;
+  isPublished: boolean;
+  publishedAt: string;
+}
+
+export const hallOfFameEntries: HallOfFameEntry[] = [
+  {
+    id: "HOF-001",
+    userId: "USR-003",
+    userName: "张雨桐",
+    userImage: null,
+    college: "数学学院",
+    tag: "国赛一等奖",
+    bio: "连续两年参加数学建模竞赛，2025 年获全国一等奖，擅长优化建模与数据分析。",
+    displayOrder: 1,
+  },
+  {
+    id: "HOF-002",
+    userId: "USR-005",
+    userName: "陈思远",
+    userImage: null,
+    college: "数学学院",
+    tag: "省赛一等奖",
+    bio: "统计学专业，数学建模省赛一等奖，专注时间序列分析与预测模型。",
+    displayOrder: 2,
+  },
+  {
+    id: "HOF-003",
+    userId: "USR-006",
+    userName: "李卓航",
+    userImage: null,
+    college: "智能制造学院",
+    tag: "最佳创新奖",
+    bio: "机器人工程专业，智能机器人创新挑战赛最佳创新奖，主攻视觉导航与路径规划。",
+    displayOrder: 3,
+  },
+  {
+    id: "HOF-004",
+    userId: "USR-007",
+    userName: "周若宁",
+    userImage: null,
+    college: "计算机学院",
+    tag: "金牌选手",
+    bio: "ACM/ICPC 区域赛金牌，校赛连续两年第一名，算法竞赛教练组成员。",
+    displayOrder: 4,
+  },
+  {
+    id: "HOF-005",
+    userId: "USR-008",
+    userName: "林晓薇",
+    userImage: null,
+    college: "商学院",
+    tag: "全国二等奖",
+    bio: "商业分析案例大赛全国二等奖，擅长市场调研与商业模型构建。",
+    displayOrder: 5,
+  },
+  {
+    id: "HOF-006",
+    userId: "USR-009",
+    userName: "吴泽宇",
+    userImage: null,
+    college: "计算机学院",
+    tag: "省赛特等奖",
+    bio: "程序设计竞赛省赛特等奖，全栈开发能力突出，开源项目贡献者。",
+    displayOrder: 6,
+  },
+];
+
+export const experiencePosts: ExperiencePost[] = [
+  {
+    id: "EXP-001",
+    userId: "USR-003",
+    userName: "张雨桐",
+    competitionId: "math-modeling-2026",
+    competitionTitle: "2026 全国大学生数学建模竞赛院内选拔",
+    title: "数学建模国赛备赛全流程复盘",
+    content: `<h2>赛前准备</h2><p>从大二开始系统学习建模方法，重点掌握了线性规划、动态规划和蒙特卡洛模拟三大类方法。建议新手先从往届 B 题入手，难度适中且数据获取方便。</p><h2>组队经验</h2><p>三人分工很关键：一人主建模、一人主编程、一人主论文。但实际比赛中角色会有交叉，所以每个人都需要对全流程有基本了解。</p><h2>比赛期间</h2><p>72 小时的比赛节奏非常紧张。我们的策略是前 12 小时充分讨论选题和建模思路，中间 36 小时并行推进模型实现和论文框架，最后 24 小时集中打磨论文。</p><h2>给学弟学妹的建议</h2><p>多参加校内模拟赛，熟悉比赛节奏比掌握更多算法更重要。论文写作能力往往是拉开差距的关键。</p>`,
+    awardLevel: "国家级一等奖",
+    coverImage: null,
+    isPublished: true,
+    publishedAt: "2025-12-15",
+  },
+  {
+    id: "EXP-002",
+    userId: "USR-006",
+    userName: "李卓航",
+    competitionId: "robot-innovation-2026",
+    competitionTitle: "2026 智能机器人创新挑战赛",
+    title: "从零搭建视觉导航机器人的参赛历程",
+    content: `<h2>项目背景</h2><p>我们团队选择了室内视觉导航赛道，目标是让机器人在未知环境中自主完成路径规划和避障。</p><h2>技术方案</h2><p>采用 ROS2 + OpenCV 的技术栈，视觉部分使用深度相机获取点云数据，路径规划基于改进的 A* 算法。最大的挑战是实时性——需要在 100ms 内完成一次完整的感知-决策-执行循环。</p><h2>踩过的坑</h2><p>硬件调试占了将近一半的时间。建议提前准备备用传感器，比赛现场环境光线和地面材质都可能和实验室不同。</p>`,
+    awardLevel: "最佳创新奖",
+    coverImage: null,
+    isPublished: true,
+    publishedAt: "2025-11-20",
+  },
+  {
+    id: "EXP-003",
+    userId: "USR-007",
+    userName: "周若宁",
+    competitionId: "programming-contest-2026",
+    competitionTitle: "2026 程序设计校赛",
+    title: "ACM 竞赛两年训练路线分享",
+    content: `<h2>入门阶段</h2><p>大一下学期开始接触算法竞赛，从基础数据结构和排序算法开始。推荐先刷完《算法竞赛入门经典》的前六章，建立基本的算法思维。</p><h2>进阶训练</h2><p>大二上学期开始系统训练图论、动态规划和数论。每周保持 3-4 场虚拟赛的频率，重点是赛后补题和总结。</p><h2>比赛策略</h2><p>5 小时的比赛中，前 30 分钟快速浏览所有题目并标记难度。先做有把握的签到题，再攻中等难度题，最后看难题。团队赛中沟通效率比个人能力更重要。</p>`,
+    awardLevel: "金牌",
+    coverImage: null,
+    isPublished: true,
+    publishedAt: "2026-01-10",
+  },
+  {
+    id: "EXP-004",
+    userId: "USR-008",
+    userName: "林晓薇",
+    competitionId: "finance-case-2025",
+    competitionTitle: "2025 商业分析案例大赛",
+    title: "商业案例分析大赛的准备与答辩技巧",
+    content: `<h2>案例分析框架</h2><p>商业案例分析最核心的是建立清晰的分析框架。我们常用的是"问题定义-数据收集-分析建模-方案设计-风险评估"五步法。</p><h2>答辩准备</h2><p>答辩环节占总分的 40%，准备时要特别注意：PPT 不超过 20 页，每页一个核心观点；预留充足的 Q&A 准备时间，评委最常问的是数据来源和假设合理性。</p>`,
+    awardLevel: "全国二等奖",
+    coverImage: null,
+    isPublished: true,
+    publishedAt: "2025-12-20",
+  },
+  {
+    id: "EXP-005",
+    userId: "USR-003",
+    userName: "张雨桐",
+    competitionId: null,
+    competitionTitle: "",
+    title: "竞赛经历对求职的帮助",
+    content: `<p>这是一篇未发布的草稿。</p>`,
+    awardLevel: "",
+    coverImage: null,
+    isPublished: false,
+    publishedAt: "",
   },
 ];
 

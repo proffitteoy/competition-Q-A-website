@@ -8,7 +8,9 @@ import {
 } from "@/lib/db/schema";
 import {
   competitions as mockCompetitions,
+  hallOfFameEntries as mockHallOfFame,
   type Competition,
+  type HallOfFameEntry,
 } from "@/lib/mock-data";
 
 import { listCompetitions } from "./competition-repository";
@@ -50,6 +52,7 @@ export interface HomepagePortalData {
   featuredCompetitions: Competition[];
   latestNotices: PublishedNoticeRecord[];
   resourceLibrary: HomepageResourceRecord[];
+  hallOfFameEntries: HallOfFameEntry[];
   featuredFaqs: HomepageFaqRecord[];
 }
 
@@ -187,6 +190,12 @@ function buildHomepageFaqs(
     .slice(0, limit);
 }
 
+function getHomepageHallOfFame(): HallOfFameEntry[] {
+  return [...mockHallOfFame].sort(
+    (left, right) => left.displayOrder - right.displayOrder,
+  );
+}
+
 export async function getHomepagePortalData(): Promise<HomepagePortalData> {
   const competitions = await listCompetitions();
   const featuredCompetitions = getFeaturedCompetitions(competitions);
@@ -199,6 +208,7 @@ export async function getHomepagePortalData(): Promise<HomepagePortalData> {
     featuredCompetitions,
     latestNotices,
     resourceLibrary,
+    hallOfFameEntries: getHomepageHallOfFame(),
     featuredFaqs: buildHomepageFaqs(featuredCompetitions, 5),
   };
 }

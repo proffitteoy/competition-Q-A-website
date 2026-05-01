@@ -33,6 +33,7 @@
 11. [首页门面化改版方案（专项）](./首页门面化改版方案.md)
 12. [生产数据库迁移与回滚手册](./生产数据库迁移与回滚手册.md)
 13. [端到端回归执行清单](./端到端回归执行清单.md)
+14. [调试样例与管理员入口](./调试样例与管理员入口.md)
 
 ## 当前结论
 
@@ -68,6 +69,7 @@
 - `npm run db:migrate:sql`：执行手工 SQL 迁移（受限环境兜底）
 - `npm run db:push`：直接推送 schema（开发环境）
 - `npm run db:seed`：写入 MVP 初始数据
+- `npm run seed:debug`：写入扩展调试样例（等价于 `db:seed`）
 - `npm run test:permissions`：执行权限越权回归测试
 - `npm run admin:create-debug`：创建/刷新调试管理员账号（`super_admin`）
 

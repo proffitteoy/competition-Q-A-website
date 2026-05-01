@@ -332,7 +332,7 @@ export default function AdminNoticesPage() {
     <div className="px-4 lg:px-6">
       <div className="space-y-8">
         <PageHeader
-          eyebrow="Notices"
+          eyebrow="通知管理"
           title="通知管理"
           description="支持比赛归属、富文本内容编辑、发布状态控制与草稿暂存。"
           actions={

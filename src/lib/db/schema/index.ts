@@ -101,6 +101,12 @@ export const attachmentVisibilityEnum = pgEnum("attachment_visibility", [
   "admin_only",
 ]);
 
+export const questionStatusEnum = pgEnum("question_status", [
+  "open",
+  "closed",
+  "hidden",
+]);
+
 export const users = pgTable(
   "user",
   {
@@ -573,6 +579,88 @@ export const registrationAuditLogs = pgTable(
       table.registrationId,
       table.createdAt,
     ),
+  }),
+);
+
+export const questions = pgTable(
+  "question",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    competitionId: uuid("competition_id")
+      .notNull()
+      .references(() => competitions.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 255 }).notNull(),
+    body: text("body").notNull(),
+    status: questionStatusEnum("status").default("open").notNull(),
+    isPinned: boolean("is_pinned").default(false).notNull(),
+    answerCount: integer("answer_count").default(0).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    competitionStatusIdx: index("question_competition_status_idx").on(
+      table.competitionId,
+      table.status,
+    ),
+    authorIdx: index("question_author_idx").on(table.authorId),
+  }),
+);
+
+export const answers = pgTable(
+  "answer",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    questionId: uuid("question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    isAccepted: boolean("is_accepted").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    questionIdx: index("answer_question_idx").on(table.questionId),
+    authorIdx: index("answer_author_idx").on(table.authorId),
+  }),
+);
+
+export const questionComments = pgTable(
+  "question_comment",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    questionId: uuid("question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "cascade" }),
+    answerId: uuid("answer_id").references(() => answers.id, {
+      onDelete: "cascade",
+    }),
+    parentId: uuid("parent_id"),
+    depth: integer("depth").default(0).notNull(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    questionIdx: index("question_comment_question_idx").on(table.questionId),
+    parentIdx: index("question_comment_parent_idx").on(table.parentId),
   }),
 );
 

@@ -39,7 +39,7 @@ export function NavMain({
 }) {
   const pathname = usePathname()
 
-  // Check if any subitem is active to determine if parent should be open
+  // 子菜单命中时默认展开父菜单
   const shouldBeOpen = (item: typeof items[0]) => {
     if (item.isActive) return true
     return item.items?.some(subItem => pathname === subItem.url) || false
@@ -71,11 +71,7 @@ export function NavMain({
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton asChild className="cursor-pointer" isActive={pathname === subItem.url}>
-                            <Link
-                              href={subItem.url}
-                              target={(item.title === "Auth Pages" || item.title === "Errors") ? "_blank" : undefined}
-                              rel={(item.title === "Auth Pages" || item.title === "Errors") ? "noopener noreferrer" : undefined}
-                            >
+                            <Link href={subItem.url}>
                               <span>{subItem.title}</span>
                             </Link>
                           </SidebarMenuSubButton>

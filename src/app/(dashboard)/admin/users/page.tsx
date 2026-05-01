@@ -51,10 +51,16 @@ interface EditFormState {
 }
 
 const roleLabel: Record<UserRole, string> = {
-  super_admin: "super_admin",
-  competition_admin: "competition_admin",
-  content_editor: "content_editor",
-  student_user: "student_user",
+  super_admin: "超级管理员",
+  competition_admin: "比赛管理员",
+  content_editor: "内容编辑",
+  student_user: "学生用户",
+};
+
+const statusLabel: Record<UserStatus, string> = {
+  active: "正常",
+  pending_verification: "待验证",
+  disabled: "已禁用",
 };
 
 const defaultEditFormState: EditFormState = {
@@ -80,13 +86,13 @@ export default function AdminUsersPage() {
         message?: string;
       };
       if (!response.ok) {
-        throw new Error(payload.message ?? "Failed to load users.");
+        throw new Error(payload.message ?? "加载用户数据失败");
       }
 
       setUsers(payload.users ?? []);
       setCompetitions(payload.competitions ?? []);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to load users.";
+      const message = error instanceof Error ? error.message : "加载用户数据失败";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -105,7 +111,7 @@ export default function AdminUsersPage() {
           message?: string;
         };
         if (!response.ok) {
-          throw new Error(payload.message ?? "Failed to load users.");
+          throw new Error(payload.message ?? "加载用户数据失败");
         }
 
         if (!cancelled) {
@@ -114,7 +120,7 @@ export default function AdminUsersPage() {
         }
       } catch (error) {
         if (!cancelled) {
-          const message = error instanceof Error ? error.message : "Failed to load users.";
+          const message = error instanceof Error ? error.message : "加载用户数据失败";
           toast.error(message);
         }
       } finally {
@@ -157,7 +163,7 @@ export default function AdminUsersPage() {
       (formState.role === "competition_admin" || formState.role === "content_editor") &&
       !formState.competitionId
     ) {
-      toast.error("Please select a competition scope for this role.");
+      toast.error("当前角色必须选择比赛作用域");
       return;
     }
 
@@ -179,14 +185,14 @@ export default function AdminUsersPage() {
       });
       const payload = (await response.json()) as { message?: string };
       if (!response.ok) {
-        throw new Error(payload.message ?? "Failed to update user.");
+        throw new Error(payload.message ?? "更新用户失败");
       }
 
-      toast.success("User updated.");
+      toast.success("用户信息已更新");
       cancelEdit();
       await loadUsers();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update user.";
+      const message = error instanceof Error ? error.message : "更新用户失败";
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -196,7 +202,7 @@ export default function AdminUsersPage() {
   const columns: ColumnDef<AdminUserRecord>[] = [
     {
       accessorKey: "name",
-      header: "User",
+      header: "用户",
       cell: ({ row }) => (
         <div className="space-y-1">
           <div className="font-medium">{row.original.name}</div>
@@ -206,33 +212,34 @@ export default function AdminUsersPage() {
     },
     {
       accessorKey: "primaryRole",
-      header: "Role",
+      header: "角色",
       cell: ({ row }) => <Badge variant="outline">{roleLabel[row.original.primaryRole]}</Badge>,
     },
     {
       accessorKey: "college",
-      header: "College",
+      header: "院系",
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: "账号状态",
+      cell: ({ row }) => <Badge variant="outline">{statusLabel[row.original.status]}</Badge>,
     },
     {
       id: "scope",
-      header: "Scope",
+      header: "比赛作用域",
       cell: ({ row }) => {
         const scoped = row.original.roleAssignments
           .filter((item) => item.scopeType === "competition")
           .map((item) => item.competitionTitle ?? item.competitionId ?? "-");
-        return scoped.length > 0 ? scoped.join(", ") : "global";
+        return scoped.length > 0 ? scoped.join("，") : "全局";
       },
     },
     {
       id: "actions",
-      header: "Actions",
+      header: "操作",
       cell: ({ row }) => (
         <Button variant="outline" size="sm" onClick={() => startEdit(row.original)}>
-          Edit
+          编辑
         </Button>
       ),
     },
@@ -242,19 +249,19 @@ export default function AdminUsersPage() {
     <div className="px-4 lg:px-6">
       <div className="space-y-8">
         <PageHeader
-          eyebrow="Users"
-          title="User and Role Management"
-          description="Manage user status and role scope through real API data."
+          eyebrow="用户管理"
+          title="用户与角色管理"
+          description="通过真实 API 管理用户状态、角色与比赛作用域。"
         />
 
         {editingUserId ? (
           <Card className="border-border/70">
             <CardHeader>
-              <CardTitle>Edit User</CardTitle>
+              <CardTitle>编辑用户</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label>Status</Label>
+                <Label>账号状态</Label>
                 <Select
                   value={formState.status}
                   onValueChange={(value) =>
@@ -265,15 +272,15 @@ export default function AdminUsersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">active</SelectItem>
-                    <SelectItem value="pending_verification">pending_verification</SelectItem>
-                    <SelectItem value="disabled">disabled</SelectItem>
+                    <SelectItem value="active">正常</SelectItem>
+                    <SelectItem value="pending_verification">待验证</SelectItem>
+                    <SelectItem value="disabled">已禁用</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Role</Label>
+                <Label>角色</Label>
                 <Select
                   value={formState.role}
                   onValueChange={(value) =>
@@ -291,16 +298,16 @@ export default function AdminUsersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="super_admin">super_admin</SelectItem>
-                    <SelectItem value="competition_admin">competition_admin</SelectItem>
-                    <SelectItem value="content_editor">content_editor</SelectItem>
-                    <SelectItem value="student_user">student_user</SelectItem>
+                    <SelectItem value="super_admin">超级管理员</SelectItem>
+                    <SelectItem value="competition_admin">比赛管理员</SelectItem>
+                    <SelectItem value="content_editor">内容编辑</SelectItem>
+                    <SelectItem value="student_user">学生用户</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Competition Scope</Label>
+                <Label>比赛作用域</Label>
                 <Select
                   value={formState.competitionId || "__none__"}
                   onValueChange={(value) =>
@@ -318,7 +325,7 @@ export default function AdminUsersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">No scope</SelectItem>
+                    <SelectItem value="__none__">无作用域</SelectItem>
                     {competitions.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.title}
@@ -330,10 +337,10 @@ export default function AdminUsersPage() {
 
               <div className="md:col-span-3 flex flex-wrap gap-3">
                 <Button onClick={submitEdit} disabled={submitting}>
-                  {submitting ? "Saving..." : "Save"}
+                  {submitting ? "保存中..." : "保存"}
                 </Button>
                 <Button variant="outline" onClick={cancelEdit} disabled={submitting}>
-                  Cancel
+                  取消
                 </Button>
               </div>
             </CardContent>
@@ -343,8 +350,8 @@ export default function AdminUsersPage() {
         <AdminDataTable
           data={users}
           columns={columns}
-          searchPlaceholder="Search by name, email, role, college, or status"
-          emptyLabel={loading ? "Loading users..." : "No user records"}
+          searchPlaceholder="按姓名、邮箱、角色、院系或状态搜索"
+          emptyLabel={loading ? "用户数据加载中..." : "暂无用户记录"}
         />
       </div>
     </div>

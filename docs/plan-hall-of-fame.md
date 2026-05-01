@@ -170,6 +170,8 @@ export interface HomepagePortalData {
 
 ### 4.2 数据边界（隐私约束）
 
+**访问控制**：`/profile/[id]` 只有当 `hallOfFameEntries` 中存在对应 `userId` 时才返回页面，否则调用 `notFound()` 返回 404。非名人堂用户的个人页不可公开访问。
+
 公开个人页**只展示以下数据**：
 - 用户基本信息：姓名、头像、学院（来自 user 表公开字段）
 - 名人堂条目：tag、bio（来自 hall_of_fame mock 数据）
@@ -209,7 +211,7 @@ export interface HomepagePortalData {
 
 路由：`src/app/profile/[id]/experiences/[postId]/page.tsx`
 
-展示单篇经验文章的完整内容。仅展示 `isPublished === true` 的文章，未发布的返回 404。
+展示单篇经验文章的完整内容。需同时校验两个条件：`isPublished === true` 且文章的 `userId === id`（路由参数），任一不满足则返回 404。防止通过路径拼接访问到其他用户的文章。
 
 HTML 内容渲染使用 `dangerouslySetInnerHTML`，需对 mock 内容做 sanitize（使用 `DOMPurify` 或类似库）。
 

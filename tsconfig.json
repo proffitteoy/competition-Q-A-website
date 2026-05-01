@@ -50,6 +50,8 @@
     "sonner-main",
     "recharts-main",
     "fullcalendar-main",
-    "dnd-kit-main"
+    "dnd-kit-main",
+    "next_discussion_platform-main",
+    "tests"
   ]
 }

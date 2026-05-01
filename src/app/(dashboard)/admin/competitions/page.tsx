@@ -56,12 +56,12 @@ export default function AdminCompetitionsPage() {
         message?: string;
       };
       if (!response.ok) {
-        throw new Error(payload.message ?? "Failed to load competitions.");
+        throw new Error(payload.message ?? "加载比赛数据失败");
       }
       setCompetitions(payload.competitions ?? []);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to load competitions.";
+        error instanceof Error ? error.message : "加载比赛数据失败";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -81,7 +81,7 @@ export default function AdminCompetitionsPage() {
           message?: string;
         };
         if (!response.ok) {
-          throw new Error(payload.message ?? "Failed to load competitions.");
+          throw new Error(payload.message ?? "加载比赛数据失败");
         }
         if (!cancelled) {
           setCompetitions(payload.competitions ?? []);
@@ -89,7 +89,7 @@ export default function AdminCompetitionsPage() {
       } catch (error) {
         if (!cancelled) {
           const message =
-            error instanceof Error ? error.message : "Failed to load competitions.";
+            error instanceof Error ? error.message : "加载比赛数据失败";
           toast.error(message);
         }
       } finally {
@@ -137,7 +137,7 @@ export default function AdminCompetitionsPage() {
       !formValues.summary.trim() ||
       !formValues.department.trim()
     ) {
-      toast.error("Please fill all required fields.");
+      toast.error("请填写所有必填字段");
       return;
     }
 
@@ -160,20 +160,20 @@ export default function AdminCompetitionsPage() {
           department: formValues.department.trim(),
           registrationMode: formValues.registrationMode,
           status: formValues.status,
-          statusReason: editingId ? "Updated from admin panel." : undefined,
+          statusReason: editingId ? "后台管理台更新" : undefined,
         }),
       });
       const payload = (await response.json()) as { message?: string };
       if (!response.ok) {
-        throw new Error(payload.message ?? "Failed to save competition.");
+        throw new Error(payload.message ?? "保存比赛失败");
       }
 
-      toast.success(editingId ? "Competition updated." : "Competition created.");
+      toast.success(editingId ? "比赛已更新" : "比赛已创建");
       cancelForm();
       await loadCompetitions();
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to save competition.";
+        error instanceof Error ? error.message : "保存比赛失败";
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -181,7 +181,7 @@ export default function AdminCompetitionsPage() {
   }
 
   async function handleDelete(item: Competition) {
-    if (!window.confirm(`Delete competition "${item.title}"?`)) {
+    if (!window.confirm(`确认删除比赛「${item.title}」吗？`)) {
       return;
     }
 
@@ -191,14 +191,14 @@ export default function AdminCompetitionsPage() {
       });
       const payload = (await response.json()) as { message?: string };
       if (!response.ok) {
-        throw new Error(payload.message ?? "Failed to delete competition.");
+        throw new Error(payload.message ?? "删除比赛失败");
       }
 
-      toast.success("Competition deleted.");
+      toast.success("比赛已删除");
       await loadCompetitions();
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to delete competition.";
+        error instanceof Error ? error.message : "删除比赛失败";
       toast.error(message);
     }
   }
@@ -206,7 +206,7 @@ export default function AdminCompetitionsPage() {
   const columns: ColumnDef<Competition>[] = [
     {
       accessorKey: "title",
-      header: "Title",
+      header: "比赛标题",
       cell: ({ row }) => (
         <div className="space-y-1">
           <div className="font-medium">{row.original.title}</div>
@@ -216,31 +216,31 @@ export default function AdminCompetitionsPage() {
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: "状态",
       cell: ({ row }) => <CompetitionStatusBadge status={row.original.status} />,
     },
     {
       accessorKey: "registrationWindow",
-      header: "Registration Window",
+      header: "报名时间",
     },
     {
       accessorKey: "department",
-      header: "Department",
+      header: "主办院系",
     },
     {
       id: "actions",
-      header: "Actions",
+      header: "操作",
       cell: ({ row }) => (
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => startEdit(row.original)}>
-            Edit
+            编辑
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleDelete(row.original)}
           >
-            Delete
+            删除
           </Button>
         </div>
       ),
@@ -251,20 +251,20 @@ export default function AdminCompetitionsPage() {
     <div className="px-4 lg:px-6">
       <div className="space-y-8">
         <PageHeader
-          eyebrow="Competitions"
-          title="Competition Management"
-          description="Manage competition records, status, and registration mode with real API data."
-          actions={<Button onClick={startCreate}>New Competition</Button>}
+          eyebrow="比赛管理"
+          title="竞赛管理"
+          description="使用真实 API 管理比赛记录、状态与报名模式。"
+          actions={<Button onClick={startCreate}>新建比赛</Button>}
         />
 
         {showForm ? (
           <Card className="border-border/70">
             <CardHeader>
-              <CardTitle>{editingId ? "Edit Competition" : "Create Competition"}</CardTitle>
+              <CardTitle>{editingId ? "编辑比赛" : "新建比赛"}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="competition-title">Title</Label>
+                <Label htmlFor="competition-title">比赛标题</Label>
                 <Input
                   id="competition-title"
                   value={formValues.title}
@@ -274,7 +274,7 @@ export default function AdminCompetitionsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="competition-category">Category</Label>
+                <Label htmlFor="competition-category">比赛分类</Label>
                 <Input
                   id="competition-category"
                   value={formValues.category}
@@ -284,7 +284,7 @@ export default function AdminCompetitionsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="competition-department">Department</Label>
+                <Label htmlFor="competition-department">主办院系</Label>
                 <Input
                   id="competition-department"
                   value={formValues.department}
@@ -294,7 +294,7 @@ export default function AdminCompetitionsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Status</Label>
+                <Label>比赛状态</Label>
                 <Select
                   value={formValues.status}
                   onValueChange={(value) =>
@@ -308,17 +308,17 @@ export default function AdminCompetitionsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">draft</SelectItem>
-                    <SelectItem value="upcoming">upcoming</SelectItem>
-                    <SelectItem value="registration_open">registration_open</SelectItem>
-                    <SelectItem value="in_progress">in_progress</SelectItem>
-                    <SelectItem value="finished">finished</SelectItem>
-                    <SelectItem value="archived">archived</SelectItem>
+                    <SelectItem value="draft">草稿</SelectItem>
+                    <SelectItem value="upcoming">即将开始</SelectItem>
+                    <SelectItem value="registration_open">报名中</SelectItem>
+                    <SelectItem value="in_progress">进行中</SelectItem>
+                    <SelectItem value="finished">已结束</SelectItem>
+                    <SelectItem value="archived">已归档</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="competition-summary">Summary</Label>
+                <Label htmlFor="competition-summary">比赛简介</Label>
                 <Input
                   id="competition-summary"
                   value={formValues.summary}
@@ -328,7 +328,7 @@ export default function AdminCompetitionsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Registration Mode</Label>
+                <Label>报名模式</Label>
                 <Select
                   value={formValues.registrationMode}
                   onValueChange={(value) =>
@@ -342,17 +342,17 @@ export default function AdminCompetitionsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="individual">individual</SelectItem>
-                    <SelectItem value="team">team</SelectItem>
+                    <SelectItem value="individual">个人报名</SelectItem>
+                    <SelectItem value="team">团队报名</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="md:col-span-2 flex flex-wrap gap-3">
                 <Button onClick={submitForm} disabled={submitting}>
-                  {submitting ? "Saving..." : editingId ? "Save Changes" : "Create"}
+                  {submitting ? "保存中..." : editingId ? "保存修改" : "创建比赛"}
                 </Button>
                 <Button variant="outline" onClick={cancelForm} disabled={submitting}>
-                  Cancel
+                  取消
                 </Button>
               </div>
             </CardContent>
@@ -362,8 +362,8 @@ export default function AdminCompetitionsPage() {
         <AdminDataTable
           data={competitions}
           columns={columns}
-          searchPlaceholder="Search by title, category, or department"
-          emptyLabel={loading ? "Loading competitions..." : "No competition records"}
+          searchPlaceholder="按比赛标题、分类或院系搜索"
+          emptyLabel={loading ? "比赛数据加载中..." : "暂无比赛记录"}
         />
       </div>
     </div>

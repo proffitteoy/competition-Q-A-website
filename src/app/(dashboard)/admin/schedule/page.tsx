@@ -9,7 +9,7 @@ export default async function AdminSchedulePage() {
     <div className="px-4 lg:px-6">
       <div className="space-y-8">
         <PageHeader
-          eyebrow="Schedule"
+          eyebrow="赛程安排"
           title="赛程安排"
           description="第一阶段先用时间线占位，后续若引入 FullCalendar，再扩展到完整日历视图。"
         />

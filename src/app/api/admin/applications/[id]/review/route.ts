@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { isAdminRole } from "@/lib/auth/authorization";
+import { resolveValidOperatorUserId } from "@/lib/auth/operator-session";
 import { getSessionUser } from "@/lib/auth/session";
 import { getApplicationById } from "@/server/repositories/application-repository";
 import { reviewApplicationService } from "@/server/services/application-service";
@@ -35,12 +36,20 @@ export async function POST(
       return NextResponse.json({ message: "无权审核该比赛报名" }, { status: 403 });
     }
 
+    const operatorUserId = await resolveValidOperatorUserId(sessionUser);
+    if (!operatorUserId) {
+      return NextResponse.json(
+        { message: "登录会话已失效，请重新登录后重试。" },
+        { status: 401 },
+      );
+    }
+
     const nextApplication = await reviewApplicationService({
       id,
       competitionId: application.competitionId,
       action: body.action,
       operator: {
-        userId: sessionUser.id,
+        userId: operatorUserId,
         name: sessionUser.name,
         role: sessionUser.role,
         scopedCompetitionIds: sessionUser.scopedCompetitionIds,
