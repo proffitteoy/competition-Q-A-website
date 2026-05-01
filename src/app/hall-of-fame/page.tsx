@@ -11,7 +11,7 @@ import { getHallOfFameEntries } from "@/server/repositories/profile-repository";
 export default async function HallOfFamePage() {
   const [session, entries] = await Promise.all([
     auth(),
-    Promise.resolve(getHallOfFameEntries()),
+    getHallOfFameEntries(),
   ]);
 
   const currentUser = session?.user

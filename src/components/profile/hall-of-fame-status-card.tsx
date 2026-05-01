@@ -4,7 +4,6 @@ import { Award, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { HallOfFameEntry } from "@/lib/mock-data";
 
 interface DisplaySettings {
   publicShowAvatar: boolean;
@@ -13,7 +12,7 @@ interface DisplaySettings {
 }
 
 interface HallOfFameStatusCardProps {
-  entry: HallOfFameEntry | null;
+  entry: { tag: string; bio: string } | null;
   userId: string;
   userName: string;
   displaySettings: DisplaySettings;

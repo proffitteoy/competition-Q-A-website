@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import {
+  Award,
+  BookOpenCheck,
   Calendar,
   ClipboardCheck,
   FileSpreadsheet,
@@ -77,6 +79,16 @@ const data = {
           title: "赛程安排",
           url: "/admin/schedule",
           icon: Calendar,
+        },
+        {
+          title: "名人堂管理",
+          url: "/admin/hall-of-fame",
+          icon: Award,
+        },
+        {
+          title: "经验文章审核",
+          url: "/admin/experience-reviews",
+          icon: BookOpenCheck,
         },
       ],
     },

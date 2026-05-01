@@ -9,6 +9,11 @@ import {
   type ExperiencePostRow,
 } from "@/server/repositories/experience-post-repository";
 import {
+  listActive,
+  getForUser,
+  type HallOfFameRow,
+} from "@/server/repositories/hall-of-fame-repository";
+import {
   users as mockUsers,
   hallOfFameEntries as mockHallOfFame,
   experiencePosts as mockExperience,
@@ -28,13 +33,50 @@ export interface PublicExperiencePost {
   publishedAt: string;
 }
 
+export interface PublicHallOfFameEntry {
+  id: string;
+  userId: string;
+  userName: string;
+  userImage: string | null;
+  college: string | null;
+  tag: string;
+  bio: string;
+  displayOrder: number;
+}
+
 export interface PublicProfile {
   id: string;
   name: string;
   college: string | null;
   image: string | null;
-  hallOfFame: HallOfFameEntry;
+  hallOfFame: PublicHallOfFameEntry;
   experiencePosts: PublicExperiencePost[];
+}
+
+function mockHofToPublic(e: HallOfFameEntry): PublicHallOfFameEntry {
+  return {
+    id: e.id,
+    userId: e.userId,
+    userName: e.userName,
+    userImage: e.userImage,
+    college: e.college,
+    tag: e.tag,
+    bio: e.bio,
+    displayOrder: e.displayOrder,
+  };
+}
+
+function dbHofToPublic(r: HallOfFameRow): PublicHallOfFameEntry {
+  return {
+    id: r.id,
+    userId: r.userId,
+    userName: r.userName,
+    userImage: r.userImage,
+    college: r.college,
+    tag: r.tag,
+    bio: r.adminBio ?? r.bio,
+    displayOrder: r.displayOrder,
+  };
 }
 
 function mockToPublicPost(p: ExperiencePost): PublicExperiencePost {
@@ -70,18 +112,42 @@ function dbToPublicPost(
   };
 }
 
-export function getHallOfFameEntries(): HallOfFameEntry[] {
-  return [...mockHallOfFame].sort(
-    (a, b) => a.displayOrder - b.displayOrder,
-  );
+export async function getHallOfFameEntries(): Promise<PublicHallOfFameEntry[]> {
+  if (isDatabaseConfigured()) {
+    try {
+      const dbEntries = await listActive();
+      if (dbEntries.length > 0) {
+        return dbEntries.map(dbHofToPublic);
+      }
+    } catch {
+      // fall through to mock
+    }
+  }
+  return [...mockHallOfFame]
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map(mockHofToPublic);
 }
 
 export async function getPublicProfile(
   userId: string,
 ): Promise<PublicProfile | null> {
-  const hofEntry = mockHallOfFame.find((e) => e.userId === userId);
+  let hofEntry: PublicHallOfFameEntry | null = null;
+
+  if (isDatabaseConfigured()) {
+    try {
+      const dbEntry = await getForUser(userId);
+      if (dbEntry && dbEntry.status === "active") {
+        hofEntry = dbHofToPublic(dbEntry);
+      }
+    } catch {
+      // fall through to mock
+    }
+  }
+
   if (!hofEntry) {
-    return null;
+    const mockEntry = mockHallOfFame.find((e) => e.userId === userId);
+    if (!mockEntry) return null;
+    hofEntry = mockHofToPublic(mockEntry);
   }
 
   if (isDatabaseConfigured()) {
@@ -120,9 +186,7 @@ export async function getPublicProfile(
   }
 
   const user = mockUsers.find((u) => u.id === userId);
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   const mockPosts = mockExperience.filter(
     (p) => p.userId === userId && p.isPublished,

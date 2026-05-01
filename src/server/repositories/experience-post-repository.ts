@@ -245,3 +245,86 @@ export async function getPublishedPostById(
   });
   return row ? toRow(row) : null;
 }
+
+// --- Admin functions ---
+
+export async function listForReview(
+  statusFilter?: ExperiencePostStatus,
+): Promise<ExperiencePostRow[]> {
+  const db = assertDb();
+  const where = statusFilter
+    ? eq(experiencePosts.status, statusFilter)
+    : undefined;
+  const rows = await db.query.experiencePosts.findMany({
+    where,
+    orderBy: desc(experiencePosts.updatedAt),
+  });
+  return rows.map(toRow);
+}
+
+export async function reviewPost(
+  postId: string,
+  action: "approve" | "reject",
+  reviewerId: string,
+  comment?: string,
+): Promise<void> {
+  const db = assertDb();
+  const row = await db.query.experiencePosts.findFirst({
+    where: eq(experiencePosts.id, postId),
+  });
+  if (!row) throw new Error("文章不存在。");
+  if (row.status !== "pending_review") {
+    throw new Error("仅待审核的文章可审核。");
+  }
+
+  const now = new Date();
+  if (action === "approve") {
+    await db
+      .update(experiencePosts)
+      .set({
+        status: "published",
+        reviewerId,
+        reviewComment: comment ?? null,
+        reviewedAt: now,
+        publishedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(experiencePosts.id, postId));
+  } else {
+    await db
+      .update(experiencePosts)
+      .set({
+        status: "draft",
+        reviewerId,
+        reviewComment: comment ?? "审核未通过",
+        reviewedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(experiencePosts.id, postId));
+  }
+}
+
+export async function adminOfflinePost(
+  postId: string,
+  reviewerId: string,
+  comment?: string,
+): Promise<void> {
+  const db = assertDb();
+  const row = await db.query.experiencePosts.findFirst({
+    where: eq(experiencePosts.id, postId),
+  });
+  if (!row) throw new Error("文章不存在。");
+  if (row.status !== "published") {
+    throw new Error("仅已发布的文章可强制下线。");
+  }
+  await db
+    .update(experiencePosts)
+    .set({
+      status: "offline",
+      reviewerId,
+      reviewComment: comment ?? "管理员强制下线",
+      reviewedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(experiencePosts.id, postId));
+}
