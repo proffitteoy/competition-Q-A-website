@@ -49,6 +49,12 @@ export async function POST(request: Request) {
       const message = error.issues.map((e) => e.message).join("；");
       return NextResponse.json({ message }, { status: 400 });
     }
+    if (isMissingRelationError(error)) {
+      return NextResponse.json(
+        { message: "名人堂功能尚未就绪，请联系管理员执行数据库迁移。" },
+        { status: 503 },
+      );
+    }
     console.error("[admin/hall-of-fame:POST]", error);
     return NextResponse.json({ message: "创建失败。" }, { status: 500 });
   }

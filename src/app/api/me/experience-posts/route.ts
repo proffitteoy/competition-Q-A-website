@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getSessionUser } from "@/lib/auth/session";
+import { isMissingRelationError } from "@/lib/db/errors";
 import {
   listMyExperiencePosts,
   createExperiencePost,
@@ -25,6 +26,9 @@ export async function GET() {
     const posts = await listMyExperiencePosts(sessionUser.id);
     return NextResponse.json({ data: posts });
   } catch (error) {
+    if (isMissingRelationError(error)) {
+      return NextResponse.json({ data: [] });
+    }
     console.error("[me/experience-posts:GET]", error);
     return NextResponse.json({ message: "获取文章列表失败。" }, { status: 500 });
   }
@@ -43,6 +47,12 @@ export async function POST(request: Request) {
     if (error instanceof z.ZodError) {
       const message = error.issues.map((e) => e.message).join("；");
       return NextResponse.json({ message }, { status: 400 });
+    }
+    if (isMissingRelationError(error)) {
+      return NextResponse.json(
+        { message: "经验文章功能尚未就绪，请联系管理员执行数据库迁移。" },
+        { status: 503 },
+      );
     }
     console.error("[me/experience-posts:POST]", error);
     return NextResponse.json({ message: "创建文章失败。" }, { status: 500 });

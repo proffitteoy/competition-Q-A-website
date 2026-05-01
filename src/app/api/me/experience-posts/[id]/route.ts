@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getSessionUser } from "@/lib/auth/session";
+import { isMissingRelationError } from "@/lib/db/errors";
 import {
   getMyExperiencePost,
   updateExperiencePost,
@@ -34,6 +35,12 @@ export async function GET(_request: Request, ctx: RouteContext) {
     }
     return NextResponse.json({ data: post });
   } catch (error) {
+    if (isMissingRelationError(error)) {
+      return NextResponse.json(
+        { message: "经验文章功能尚未就绪，请联系管理员执行数据库迁移。" },
+        { status: 503 },
+      );
+    }
     console.error("[me/experience-posts/[id]:GET]", error);
     return NextResponse.json({ message: "获取文章失败。" }, { status: 500 });
   }
@@ -54,6 +61,12 @@ export async function PUT(request: Request, ctx: RouteContext) {
       const message = error.issues.map((e) => e.message).join("；");
       return NextResponse.json({ message }, { status: 400 });
     }
+    if (isMissingRelationError(error)) {
+      return NextResponse.json(
+        { message: "经验文章功能尚未就绪，请联系管理员执行数据库迁移。" },
+        { status: 503 },
+      );
+    }
     const message = error instanceof Error ? error.message : "更新失败。";
     const status = message.includes("不存在") ? 404 : message.includes("可编辑") ? 400 : 500;
     console.error("[me/experience-posts/[id]:PUT]", error);
@@ -71,6 +84,12 @@ export async function DELETE(_request: Request, ctx: RouteContext) {
     await deleteExperiencePost(sessionUser.id, id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (isMissingRelationError(error)) {
+      return NextResponse.json(
+        { message: "经验文章功能尚未就绪，请联系管理员执行数据库迁移。" },
+        { status: 503 },
+      );
+    }
     const message = error instanceof Error ? error.message : "删除失败。";
     const status = message.includes("不存在") ? 404 : message.includes("下线") ? 400 : 500;
     console.error("[me/experience-posts/[id]:DELETE]", error);

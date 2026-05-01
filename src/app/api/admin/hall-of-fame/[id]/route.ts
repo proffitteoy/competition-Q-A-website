@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getSessionUser } from "@/lib/auth/session";
 import { isAdminRole } from "@/lib/auth/authorization";
+import { isMissingRelationError } from "@/lib/db/errors";
 import {
   getOneAdmin,
   updateHallOfFameEntry,
@@ -34,6 +35,12 @@ export async function GET(_request: Request, ctx: RouteContext) {
     }
     return NextResponse.json({ data: entry });
   } catch (error) {
+    if (isMissingRelationError(error)) {
+      return NextResponse.json(
+        { message: "名人堂功能尚未就绪，请联系管理员执行数据库迁移。" },
+        { status: 503 },
+      );
+    }
     console.error("[admin/hall-of-fame/[id]:GET]", error);
     return NextResponse.json({ message: "获取失败。" }, { status: 500 });
   }
@@ -54,6 +61,12 @@ export async function PUT(request: Request, ctx: RouteContext) {
       const message = error.issues.map((e) => e.message).join("；");
       return NextResponse.json({ message }, { status: 400 });
     }
+    if (isMissingRelationError(error)) {
+      return NextResponse.json(
+        { message: "名人堂功能尚未就绪，请联系管理员执行数据库迁移。" },
+        { status: 503 },
+      );
+    }
     const message = error instanceof Error ? error.message : "更新失败。";
     console.error("[admin/hall-of-fame/[id]:PUT]", error);
     return NextResponse.json({ message }, { status: 500 });
@@ -70,6 +83,12 @@ export async function DELETE(_request: Request, ctx: RouteContext) {
     await deleteHallOfFameEntry(id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (isMissingRelationError(error)) {
+      return NextResponse.json(
+        { message: "名人堂功能尚未就绪，请联系管理员执行数据库迁移。" },
+        { status: 503 },
+      );
+    }
     console.error("[admin/hall-of-fame/[id]:DELETE]", error);
     return NextResponse.json({ message: "删除失败。" }, { status: 500 });
   }

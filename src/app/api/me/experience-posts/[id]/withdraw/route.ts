@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/lib/auth/session";
+import { isMissingRelationError } from "@/lib/db/errors";
 import { withdrawExperiencePost } from "@/server/repositories/experience-post-repository";
 
 interface RouteContext {
@@ -17,6 +18,12 @@ export async function POST(_request: Request, ctx: RouteContext) {
     await withdrawExperiencePost(sessionUser.id, id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (isMissingRelationError(error)) {
+      return NextResponse.json(
+        { message: "经验文章功能尚未就绪，请联系管理员执行数据库迁移。" },
+        { status: 503 },
+      );
+    }
     const message = error instanceof Error ? error.message : "撤回失败。";
     const status = message.includes("不存在") ? 404 : message.includes("待审核") ? 400 : 500;
     console.error("[me/experience-posts/[id]/withdraw]", error);
